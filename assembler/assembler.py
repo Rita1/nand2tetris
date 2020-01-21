@@ -1,3 +1,8 @@
+# conda activate py3
+# conda install netcdf4
+# conda deactivate
+# python -m pytest
+# pytest -k  "debug"
 
 class Assembler():
 
@@ -5,5 +10,4 @@ class Assembler():
          print("Hello world")
 
 if __name__ == "__main__":
-    c1 = Assembler()
-    c1.main()
+    Assembler.main()

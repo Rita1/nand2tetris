@@ -1,10 +1,11 @@
 import unittest
+from .. import assembler as amb
 
 class TestMyClass(unittest.TestCase):
 
-    def test_parse9(self):
+    def test_main(self):
 
-        result = Parser.parse("9")
+        result = amb.Assembler.main()
         print("9", result)
         self.assertFalse(result.span()[1] == 0)
 
