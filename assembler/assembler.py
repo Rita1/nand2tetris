@@ -9,7 +9,7 @@ import os
 
 PATH = "/tests/files/"
 FILE = "Add.asm"
-
+LABELS_MEMORY_START = 16
 
 class SymbolTable():
 
@@ -23,25 +23,65 @@ class SymbolTable():
 
     symbolTable = {}
     instructions_counter = 0
+    labels_counter = LABELS_MEMORY_START
+
+    def reset():
+        SymbolTable.symbolTable = {}
+        SymbolTable.instructions_counter = 0
+        SymbolTable.labels_counter = LABELS_MEMORY_START
 
     """
     By given line update how many instruction is in file
+    Skip if line starts with (
     """
 
     def update_counter(line):
-        SymbolTable.instructions_counter += 1
+        if line and not line[0] == "(":
+            SymbolTable.instructions_counter += 1
         return
     
     """
-    Update Symbol Table by given parsed symbol dict. and memory counter and give them memory location
-    If A label, give first address starting from 16 bit - 10000
+    Make 16bit binary address from number
+    """
+
+    def get_address(number):
+        # print("number", number)
+        b_n = bin(int(number))[2:]
+        # print("b_n", "len", b_n, len(b_n))
+        add_zero = ''
+        for i in range(16-len(b_n)):
+            add_zero = add_zero + '0'
+        full_address = add_zero + b_n
+        # print("add_zero","full_address", add_zero, full_address)
+        return full_address
+
+    """
+    Update Symbol Table by given line and give them memory location
+    If line is @ string, give first address starting from 16 bit - 10000
+    If number, give address from number convert to 16 bit binary
+    If starts with (, give address from counter
+
     {'i' : '0000 0000 0001 0000'}
     {'sum' : '0000 0000 0001 0001'}
     
     """
 
     def updateSymbolTable(line):
-        SymbolTable.symbolTable['i'] = '0'
+        # print('line', line)
+        address = ''
+        if line[0] == '@':
+            ln = line[1:]
+            if ln.isnumeric():
+                address = SymbolTable.get_address(ln)
+                SymbolTable.symbolTable[ln] = address
+            elif ln not in SymbolTable.symbolTable:
+                address = SymbolTable.get_address(SymbolTable.labels_counter)
+                SymbolTable.labels_counter += 1              
+                SymbolTable.symbolTable[ln] = address
+        if line[0] == '(':
+            address = SymbolTable.get_address(SymbolTable.instructions_counter)
+            SymbolTable.symbolTable[line[1:-1]] = address
+        # print('line', line, 'address', address, 'table', SymbolTable.symbolTable)
         return
 
 
@@ -182,18 +222,21 @@ class Code():
         code = ''
         if parsed_dict['commandType'] == 'C_command':
             code = '111'
+            code_d = 'dest' in parsed_dict and Code.get_dest(parsed_dict['dest'])
+            code_c = 'comp' in parsed_dict and Code.get_comp(parsed_dict['comp'])
+            code_j = 'jump' in parsed_dict and Code.get_jump(parsed_dict['jump'])
+            if code_c:
+                code = code + code_c
+            if code_d:
+                code = code + code_d
+            if code_j:
+                code = code + code_j
+            print("dest", code_d, "comp", code_c, "jump", code_j, "binary code", code)
         else:
-            code = '0'    
-        code_d = 'dest' in parsed_dict and Code.get_dest(parsed_dict['dest'])
-        code_c = 'comp' in parsed_dict and Code.get_comp(parsed_dict['comp'])
-        code_j = 'jump' in parsed_dict and Code.get_jump(parsed_dict['jump'])
-        if code_c:
-            code = code + code_c
-        if code_d:
-            code = code + code_d
-        if code_j:
-            code = code + code_j
-        print("dest", code_d, "comp", code_c, "jump", code_j, "binary code", code)
+            print("ST", SymbolTable.symbolTable)
+            label = parsed_dict['symbol']
+            code = SymbolTable.symbolTable[label]  
+        
         return code
 
 
@@ -287,14 +330,19 @@ class Assembler():
         # remove old file
         if os.path.exists(file_to_write):
             os.remove(file_to_write)
-
+        # reset server for unit tests
+        SymbolTable.reset()
         # First pass - go line by line and update memory_counter + Symbolic table
-        # TODO dont pass empty lines
         try:
             with open(file_to_open) as f1:
                 for line in f1:
-                    SymbolTable.update_counter(line)
-                    SymbolTable.updateSymbolTable(line)
+                    ln = line.strip()
+                    # print("my ln", ln)
+                    # print(not bool(ln))
+                    if ln and not ln[0] == '/':
+                        # print("ln", ln)
+                        SymbolTable.update_counter(ln)
+                        SymbolTable.updateSymbolTable(ln)
 
         except IOError:
             print("Something wrong")
@@ -304,9 +352,10 @@ class Assembler():
             print("file to open", file_to_open, 'file_to_write', file_to_write)
             with open(file_to_open) as f:               
                 for line in f:
-                    parsed_command = Parser.parse(line)
+                    ln = line.strip()
+                    parsed_command = Parser.parse(ln)
                     if parsed_command:
-                        code = Code.get_code(parsed_command)
+                        code = Code.get_code(parsed_command) + '\n'
                         with open(file_to_write, 'a') as fw:
                             fw.write(code)
         except IOError:

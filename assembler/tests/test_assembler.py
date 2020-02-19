@@ -177,20 +177,194 @@ class TestMyClass(unittest.TestCase):
 
     def test_symbol_table_basic(self):
         
+        ass.SymbolTable.reset()
         ass.SymbolTable.update_counter('@i')
         ass.SymbolTable.updateSymbolTable('@i')
         address = ass.SymbolTable.symbolTable['i']
         count = ass.SymbolTable.instructions_counter
-
         self.assertEqual(1, count)
         self.assertEqual('0000000000010000', address)
 
+        ass.SymbolTable.update_counter('@sum')
+        ass.SymbolTable.updateSymbolTable('@sum')
+        address = ass.SymbolTable.symbolTable['sum']
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(2, count)
+        self.assertEqual('0000000000010001', address)
 
+    def test_symbol_table_1(self):
+
+        ass.SymbolTable.reset()
+        ass.SymbolTable.update_counter('@i')
+        ass.SymbolTable.updateSymbolTable('@i')
+        address = ass.SymbolTable.symbolTable['i']
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(1, count)
+        self.assertEqual('0000000000010000', address)
+
+        ass.SymbolTable.update_counter('M=1')
+        ass.SymbolTable.updateSymbolTable('M=1')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(2, count)
+        self.assertEqual(1, table_len)
+        
+        ass.SymbolTable.update_counter('@sum')
+        ass.SymbolTable.updateSymbolTable('@sum')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        address = ass.SymbolTable.symbolTable['sum']
+        self.assertEqual(3, count)
+        self.assertEqual(2, table_len)
+        self.assertEqual('0000000000010001', address)
+
+        ass.SymbolTable.update_counter('M=0')
+        ass.SymbolTable.updateSymbolTable('M=0')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(4, count)
+        self.assertEqual(2, table_len)
+
+        ass.SymbolTable.update_counter('(LOOP)')
+        ass.SymbolTable.updateSymbolTable('(LOOP)')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        address = ass.SymbolTable.symbolTable['LOOP']
+        self.assertEqual(4, count)
+        self.assertEqual(3, table_len)
+        self.assertEqual('0000000000000100', address) #decimal - 4
+
+        ass.SymbolTable.update_counter('@i')
+        ass.SymbolTable.updateSymbolTable('@i')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        address = ass.SymbolTable.symbolTable['i']
+        self.assertEqual(5, count)
+        self.assertEqual(3, table_len)
+        self.assertEqual('0000000000010000', address)
+
+        ass.SymbolTable.update_counter('D=M')
+        ass.SymbolTable.updateSymbolTable('D=M')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(6, count)
+        self.assertEqual(3, table_len)
+
+        ass.SymbolTable.update_counter('@100')
+        ass.SymbolTable.updateSymbolTable('@100')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count = ass.SymbolTable.instructions_counter
+        address = ass.SymbolTable.symbolTable['100']
+        self.assertEqual(7, count)
+        self.assertEqual(4, table_len)
+        self.assertEqual('0000000001100100', address)
+
+    def test_symbol_table_2(self):
+
+        ass.SymbolTable.reset()
+        ass.SymbolTable.instructions_counter = 18
+        ass.SymbolTable.update_counter('(END)')
+        ass.SymbolTable.updateSymbolTable('(END)')
+        address = ass.SymbolTable.symbolTable['END']
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(18, count)
+        self.assertEqual('0000000000010010', address)
+
+        ass.SymbolTable.update_counter('@END')
+        ass.SymbolTable.updateSymbolTable('@END')
+        address = ass.SymbolTable.symbolTable['END']
+        count = ass.SymbolTable.instructions_counter
+        self.assertEqual(19, count)
+        self.assertEqual('0000000000010010', address)
+ 
         # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'i'}, 0)
         # self.assertEqual('0000000000010000', address)
 
         # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'sum'}, 1)
         # self.assertEqual('0000000000010001', address)
+
+    def test_get_address(self):
+        address = ass.SymbolTable.get_address(0)
+        self.assertEqual('0000000000000000', address)
+
+        address = ass.SymbolTable.get_address(1)
+        self.assertEqual('0000000000000001', address)
+
+        address = ass.SymbolTable.get_address(2)
+        self.assertEqual('0000000000000010', address)
+
+        address = ass.SymbolTable.get_address(100)
+        self.assertEqual('0000000001100100', address)
+
+    def test_main_basic(self):
+
+        ass.Assembler.main('A_instr.asm')
+        file_result = os.getcwd() + "/tests/files/A_instr.hack"
+        file_answer = os.getcwd() + "/tests/files/A_instr_answ.hack"
+        f_result = open(file_result, 'r')
+        f_answer = open(file_answer, 'r')
+
+        lines_count = 0
+        for line in f_result:
+            lines_count += 1
+        f_result.seek(0)    
+        for i in range(lines_count):
+            self.assertEqual(f_result.readline(), f_answer.readline())
+        f_result.close()
+        f_answer.close()
+
+    def test_main_add(self):
+
+        ass.Assembler.main('Add.asm')
+        file_result = os.getcwd() + "/tests/files/Add.hack"
+        file_answer = os.getcwd() + "/tests/files/Add_answ.hack"
+        f_result = open(file_result, 'r')
+        f_answer = open(file_answer, 'r')
+
+        lines_count = 0
+        for line in f_result:
+            lines_count += 1
+        f_result.seek(0)    
+        for i in range(lines_count):
+            self.assertEqual(f_result.readline(), f_answer.readline())
+        f_result.close()
+        f_answer.close()
+           
+    def test_main_max(self):
+
+        ass.Assembler.main('Max.asm')
+        file_result = os.getcwd() + "/tests/files/Max.hack"
+        file_answer = os.getcwd() + "/tests/files/Max_answ.hack"
+        f_result = open(file_result, 'r')
+        f_answer = open(file_answer, 'r')
+
+        lines_count = 0
+        for line in f_result:
+            lines_count += 1
+        f_result.seek(0)    
+        for i in range(lines_count):
+            self.assertEqual(f_result.readline(), f_answer.readline())
+        f_result.close()
+        f_answer.close()
+
+    def test_main_maxl(self):
+
+        ass.Assembler.main('MaxL.asm')
+        file_result = os.getcwd() + "/tests/files/MaxL.hack"
+        file_answer = os.getcwd() + "/tests/files/MaxL_answ.hack"
+        f_result = open(file_result, 'r')
+        f_answer = open(file_answer, 'r')
+
+        lines_count = 0
+        for line in f_result:
+            lines_count += 1
+        f_result.seek(0)    
+        for i in range(lines_count):
+            print("lines_count", lines_count)
+            self.assertEqual(f_result.readline(), f_answer.readline())
+        f_result.close()
+        f_answer.close()
+
 
 if __name__ == '__main__':
     unittest.main()
