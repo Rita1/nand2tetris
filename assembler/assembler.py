@@ -10,39 +10,157 @@ import os
 PATH = "/tests/files/"
 FILE = "Add.asm"
 
+
+class SymbolTable():
+
+    """
+    symbolTable - all symbols in assembler program list with their memory location
+    Memory location - 16 bits
+    Exmp: "'i' : '0000 0000 0000 000'"
+
+    instructions_counter - Calculate how many instructions is in file, for symbols parsing
+    """
+
+    symbolTable = {}
+    instructions_counter = 0
+
+    """
+    By given line update how many instruction is in file
+    """
+
+    def update_counter(line):
+        SymbolTable.instructions_counter += 1
+        return
+    
+    """
+    Update Symbol Table by given parsed symbol dict. and memory counter and give them memory location
+    If A label, give first address starting from 16 bit - 10000
+    {'i' : '0000 0000 0001 0000'}
+    {'sum' : '0000 0000 0001 0001'}
+    
+    """
+
+    def updateSymbolTable(line):
+        SymbolTable.symbolTable['i'] = '0'
+        return
+
+
 class Code():
 
     """
-    Get parsed comp string
+    Get parsed comp strin
     Returns the binary code 7 bits string of the comp
-
-    !!!
     """
 
     def get_comp(parsed_code):
-        return '0000000'
+        code = '0000000'
+        if parsed_code == '0':
+            code = '0101010'
+        elif parsed_code == '1':
+            code = '0111111'
+        elif parsed_code == '-1':
+            code = '0111010'
+        elif parsed_code == 'D':
+            code = '0001100'
+        elif parsed_code == 'A':
+            code = '0110000'
+        elif parsed_code == '!D':
+            code = '0001101'
+        elif parsed_code == '!A':
+            code = '0110001'
+        elif parsed_code == '-D':
+            code = '0001111'
+        elif parsed_code == '-A':
+            code = '0110011'
+        elif parsed_code == 'D+1':
+            code = '0011111'
+        elif parsed_code == 'A+1':
+            code = '0110111'
+        elif parsed_code == 'D-1':
+            code = '0001110'
+        elif parsed_code == 'A-1':
+            code = '0110010'
+        elif parsed_code == 'D+A':
+            code = '0000010'
+        elif parsed_code == 'D-A':
+            code = '0010011'
+        elif parsed_code == 'A-D':
+            code = '0000111'
+        elif parsed_code == 'D&A':
+            code = '0000000'
+        elif parsed_code == 'D|A': #
+            code = '0010101' 
+        # when a=1
+        elif parsed_code == 'M':
+            code = '1110000'
+        elif parsed_code == '!M':
+            code = '1110001'
+        elif parsed_code == '-M':
+            code = '1110011'
+        elif parsed_code == 'M+1':
+            code = '1110111'
+        elif parsed_code == 'M-1':
+            code = '1110010'
+        elif parsed_code == 'D+M': #
+            code = '1000010'
+        elif parsed_code == 'D-M':
+            code = '1010011'
+        elif parsed_code == 'M-D':
+            code = '1000111'
+        elif parsed_code == 'D&M':
+            code = '1000000'
+        elif parsed_code == 'D|M':
+            code = '1010101'                            
+        return code
 
 
     """
     Get parsed jump string
     Returns the binary code 3 bits string of the jump
-
-    !!!
     """
 
     def get_jump(parsed_code):
-        return '000'
+        code = '000'
+        if parsed_code == 'JGT':
+            code = '001'
+        elif parsed_code == 'JEQ':
+            code = '010'
+        elif parsed_code == 'JGE':
+            code = '011'
+        elif parsed_code == 'JLT':
+            code = '100'
+        elif parsed_code == 'JNE':
+            code = '101'
+        elif parsed_code == 'JLE':
+            code = '110'
+        elif parsed_code == 'JMP':
+            code = '111'    
+        return code
 
     """
     Get parsed destination string
     Returns the binary code 3 bits string of the dest
 
     Exp. M - 001
-    !!!
     """
 
     def get_dest(parsed_code):
-        return '000'
+        code = '000'
+        if parsed_code == 'M':
+            code = '001'
+        elif parsed_code == 'D':
+            code = '010'
+        elif parsed_code == 'MD':
+            code = '011'
+        elif parsed_code == 'A':
+            code = '100'
+        elif parsed_code == 'AM':
+            code = '101'
+        elif parsed_code == 'AD':
+            code = '110'
+        elif parsed_code == 'AMD':
+            code = '111'      
+        return code
 
     """
     Consume parsed dict
@@ -60,22 +178,27 @@ class Code():
 
     """
     def get_code(parsed_dict):
+        print("parsed_dict", parsed_dict)
         code = ''
+        if parsed_dict['commandType'] == 'C_command':
+            code = '111'
+        else:
+            code = '0'    
         code_d = 'dest' in parsed_dict and Code.get_dest(parsed_dict['dest'])
         code_c = 'comp' in parsed_dict and Code.get_comp(parsed_dict['comp'])
         code_j = 'jump' in parsed_dict and Code.get_jump(parsed_dict['jump'])
-        if code_d:
-            code = code + code_d
         if code_c:
             code = code + code_c
+        if code_d:
+            code = code + code_d
         if code_j:
             code = code + code_j
-        print("dest", code_d, "comp", code_c, "jump", code_c, "binary code", code)
+        print("dest", code_d, "comp", code_c, "jump", code_j, "binary code", code)
         return code
 
 
 class Parser():
-
+    
     """
     Consume assmebler command.
     Returns command components dictionary. In addition, removes spaces and comments
@@ -152,7 +275,7 @@ class Assembler():
     """
 
     def main(file_to_parse=False):
-
+        
         if file_to_parse:
             file_name_write = file_to_parse.split('.')[0] + ".hack"
         else:
@@ -164,15 +287,28 @@ class Assembler():
         # remove old file
         if os.path.exists(file_to_write):
             os.remove(file_to_write)
-            
+
+        # First pass - go line by line and update memory_counter + Symbolic table
+        # TODO dont pass empty lines
+        try:
+            with open(file_to_open) as f1:
+                for line in f1:
+                    SymbolTable.update_counter(line)
+                    SymbolTable.updateSymbolTable(line)
+
+        except IOError:
+            print("Something wrong")
+
+        # Second pass         
         try:
             print("file to open", file_to_open, 'file_to_write', file_to_write)
-            with open(file_to_open) as f:
+            with open(file_to_open) as f:               
                 for line in f:
                     parsed_command = Parser.parse(line)
-                    code = Code.get_code(parsed_command)
-                    with open(file_to_write, 'a') as fw:
-                        fw.write(code)
+                    if parsed_command:
+                        code = Code.get_code(parsed_command)
+                        with open(file_to_write, 'a') as fw:
+                            fw.write(code)
         except IOError:
             print("No file")
 

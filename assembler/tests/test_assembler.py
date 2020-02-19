@@ -119,7 +119,7 @@ class TestMyClass(unittest.TestCase):
         self.assertEqual('1110111111001000', code)
 
         code = ass.Code.get_code({'commandType': 'C_command', 'dest': 'M', 'comp': '0', 'jump': False})
-        self.assertEqual('11101010110001000', code)
+        self.assertEqual('1110101010001000', code)
 
         code = ass.Code.get_code({'commandType': 'C_command', 'dest': False, 'comp': '0', 'jump': 'JMP'})
         self.assertEqual('1110101010000111', code)
@@ -174,6 +174,23 @@ class TestMyClass(unittest.TestCase):
 
         comp = ass.Code.get_comp('D&A')
         self.assertEqual('0000000', comp)
+
+    def test_symbol_table_basic(self):
+        
+        ass.SymbolTable.update_counter('@i')
+        ass.SymbolTable.updateSymbolTable('@i')
+        address = ass.SymbolTable.symbolTable['i']
+        count = ass.SymbolTable.instructions_counter
+
+        self.assertEqual(1, count)
+        self.assertEqual('0000000000010000', address)
+
+
+        # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'i'}, 0)
+        # self.assertEqual('0000000000010000', address)
+
+        # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'sum'}, 1)
+        # self.assertEqual('0000000000010001', address)
 
 if __name__ == '__main__':
     unittest.main()
