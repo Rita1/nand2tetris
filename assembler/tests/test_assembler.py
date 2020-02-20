@@ -207,7 +207,7 @@ class TestMyClass(unittest.TestCase):
         table_len = len(ass.SymbolTable.symbolTable)
         count = ass.SymbolTable.instructions_counter
         self.assertEqual(2, count)
-        self.assertEqual(1, table_len)
+        self.assertEqual(24, table_len)
         
         ass.SymbolTable.update_counter('@sum')
         ass.SymbolTable.updateSymbolTable('@sum')
@@ -215,7 +215,7 @@ class TestMyClass(unittest.TestCase):
         count = ass.SymbolTable.instructions_counter
         address = ass.SymbolTable.symbolTable['sum']
         self.assertEqual(3, count)
-        self.assertEqual(2, table_len)
+        self.assertEqual(25, table_len)
         self.assertEqual('0000000000010001', address)
 
         ass.SymbolTable.update_counter('M=0')
@@ -223,7 +223,7 @@ class TestMyClass(unittest.TestCase):
         table_len = len(ass.SymbolTable.symbolTable)
         count = ass.SymbolTable.instructions_counter
         self.assertEqual(4, count)
-        self.assertEqual(2, table_len)
+        self.assertEqual(25, table_len)
 
         ass.SymbolTable.update_counter('(LOOP)')
         ass.SymbolTable.updateSymbolTable('(LOOP)')
@@ -231,7 +231,7 @@ class TestMyClass(unittest.TestCase):
         count = ass.SymbolTable.instructions_counter
         address = ass.SymbolTable.symbolTable['LOOP']
         self.assertEqual(4, count)
-        self.assertEqual(3, table_len)
+        self.assertEqual(26, table_len)
         self.assertEqual('0000000000000100', address) #decimal - 4
 
         ass.SymbolTable.update_counter('@i')
@@ -240,7 +240,7 @@ class TestMyClass(unittest.TestCase):
         count = ass.SymbolTable.instructions_counter
         address = ass.SymbolTable.symbolTable['i']
         self.assertEqual(5, count)
-        self.assertEqual(3, table_len)
+        self.assertEqual(26, table_len)
         self.assertEqual('0000000000010000', address)
 
         ass.SymbolTable.update_counter('D=M')
@@ -248,7 +248,7 @@ class TestMyClass(unittest.TestCase):
         table_len = len(ass.SymbolTable.symbolTable)
         count = ass.SymbolTable.instructions_counter
         self.assertEqual(6, count)
-        self.assertEqual(3, table_len)
+        self.assertEqual(26, table_len)
 
         ass.SymbolTable.update_counter('@100')
         ass.SymbolTable.updateSymbolTable('@100')
@@ -256,7 +256,7 @@ class TestMyClass(unittest.TestCase):
         count = ass.SymbolTable.instructions_counter
         address = ass.SymbolTable.symbolTable['100']
         self.assertEqual(7, count)
-        self.assertEqual(4, table_len)
+        self.assertEqual(27, table_len)
         self.assertEqual('0000000001100100', address)
 
     def test_symbol_table_2(self):
@@ -365,6 +365,14 @@ class TestMyClass(unittest.TestCase):
         f_result.close()
         f_answer.close()
 
+    def test_predefined_table(self):
+        
+        t = ass.SymbolTable.get_predifined_symbols()
+
+        self.assertEqual('0000000000000000', t['R0'])
+        self.assertEqual('0000000000000001', t['R1'])
+        self.assertEqual('0000000000001100', t['R12'])
+        self.assertEqual('0000000000001111', t['R15'])
 
 if __name__ == '__main__':
     unittest.main()

@@ -24,9 +24,35 @@ class SymbolTable():
     symbolTable = {}
     instructions_counter = 0
     labels_counter = LABELS_MEMORY_START
+    
+    def __init__(self, name, is_male):
+        self.symbolTable = SymbolTable.get_predifined_symbols()
+        
+    """
+    Make table from fixed symbols and addresses
+    """
+
+    def get_predifined_symbols():
+        table = {}
+        table['SP'] = '0000000000000000'
+        table['LCL'] = '0000000000000001'
+        table['ARG'] = '0000000000000010'
+        table['THIS'] = '0000000000000011'
+        table['THAT'] = '0000000000000100'
+        table['SCREEN'] = '0100000000000000'
+        table['KBD'] = '0110000000000000'
+
+        for i in range(15+1):
+            r = 'R' + str(i)
+            address = SymbolTable.get_address(i)
+            table[r] = address
+
+        return table
+
+    
 
     def reset():
-        SymbolTable.symbolTable = {}
+        SymbolTable.symbolTable = SymbolTable.get_predifined_symbols()
         SymbolTable.instructions_counter = 0
         SymbolTable.labels_counter = LABELS_MEMORY_START
 
