@@ -14,20 +14,46 @@ LABELS_MEMORY_START = 16
 class SymbolTable():
 
     """
-    symbolTable - all symbols in assembler program list with their memory location
+    symbolTable - all symbols in assembler program list with info how many instructions is above them
     Memory location - 16 bits
     Exmp: "'i' : '0000 0000 0000 000'"
 
-    instructions_counter - Calculate how many instructions is in file, for symbols parsing
+    instructions_counter - Calculate how many instructions is in file, for labels parsing
+    
     """
 
     symbolTable = {}
     instructions_counter = 0
-    labels_counter = LABELS_MEMORY_START
     
-    def __init__(self, name, is_male):
-        self.symbolTable = SymbolTable.get_predifined_symbols()
-        
+    """
+    By given line update how many instruction is in file
+    Skip if line starts with (
+    If starts with (, save how many instructions is
+
+    {'i' : 0}
+    {'sum' : 5}
+    
+    """
+
+    def updateSymbolTable(line):
+        if line and not line[0] == "(":
+            SymbolTable.instructions_counter += 1
+        if line[0] == '(':
+            SymbolTable.symbolTable[line[1:-1]] = SymbolTable.instructions_counter
+        # print('line', line, 'address', address, 'table', SymbolTable.symbolTable)
+        return
+
+
+class Code():
+
+    """
+    table - for allready parsed A commands addresses
+    labels_counter - counts how many labels (xxx) is curently in ROM, starts from 16 bits
+    """
+    
+    table = {}
+    labels_counter = LABELS_MEMORY_START
+
     """
     Make table from fixed symbols and addresses
     """
@@ -44,74 +70,23 @@ class SymbolTable():
 
         for i in range(15+1):
             r = 'R' + str(i)
-            address = SymbolTable.get_address(i)
+            address = Code.get_address(i)
             table[r] = address
 
         return table
 
-    
 
-    def reset():
-        SymbolTable.symbolTable = SymbolTable.get_predifined_symbols()
-        SymbolTable.instructions_counter = 0
-        SymbolTable.labels_counter = LABELS_MEMORY_START
-
-    """
-    By given line update how many instruction is in file
-    Skip if line starts with (
-    """
-
-    def update_counter(line):
-        if line and not line[0] == "(":
-            SymbolTable.instructions_counter += 1
-        return
-    
     """
     Make 16bit binary address from number
     """
 
     def get_address(number):
-        # print("number", number)
         b_n = bin(int(number))[2:]
-        # print("b_n", "len", b_n, len(b_n))
         add_zero = ''
         for i in range(16-len(b_n)):
             add_zero = add_zero + '0'
         full_address = add_zero + b_n
-        # print("add_zero","full_address", add_zero, full_address)
         return full_address
-
-    """
-    Update Symbol Table by given line and give them memory location
-    If line is @ string, give first address starting from 16 bit - 10000
-    If number, give address from number convert to 16 bit binary
-    If starts with (, give address from counter
-
-    {'i' : '0000 0000 0001 0000'}
-    {'sum' : '0000 0000 0001 0001'}
-    
-    """
-
-    def updateSymbolTable(line):
-        # print('line', line)
-        address = ''
-        if line[0] == '@':
-            ln = line[1:]
-            if ln.isnumeric():
-                address = SymbolTable.get_address(ln)
-                SymbolTable.symbolTable[ln] = address
-            elif ln not in SymbolTable.symbolTable:
-                address = SymbolTable.get_address(SymbolTable.labels_counter)
-                SymbolTable.labels_counter += 1              
-                SymbolTable.symbolTable[ln] = address
-        if line[0] == '(':
-            address = SymbolTable.get_address(SymbolTable.instructions_counter)
-            SymbolTable.symbolTable[line[1:-1]] = address
-        # print('line', line, 'address', address, 'table', SymbolTable.symbolTable)
-        return
-
-
-class Code():
 
     """
     Get parsed comp strin
@@ -231,6 +206,13 @@ class Code():
     """
     Consume parsed dict
     Return binary code
+    
+    For A commands:
+        If number, give address from number convert to 16 bit binary
+        If line is @ string, give first address starting from 16 bit - 10000
+        Update allready parsed symbols by given line and give them memory location
+    For L commands:
+        Give address by their realeted instruction counters
 
     Exp. {'commandType': 'C_command', 'dest': 'M', 'comp': '1', 'jump': False}
          1110 1111 1100 1000
@@ -244,8 +226,9 @@ class Code():
 
     """
     def get_code(parsed_dict):
-        print("parsed_dict", parsed_dict)
+        
         code = ''
+        code_final = ''
         if parsed_dict['commandType'] == 'C_command':
             code = '111'
             code_d = 'dest' in parsed_dict and Code.get_dest(parsed_dict['dest'])
@@ -257,13 +240,23 @@ class Code():
                 code = code + code_d
             if code_j:
                 code = code + code_j
-            print("dest", code_d, "comp", code_c, "jump", code_j, "binary code", code)
-        else:
-            print("ST", SymbolTable.symbolTable)
-            label = parsed_dict['symbol']
-            code = SymbolTable.symbolTable[label]  
-        
-        return code
+        elif parsed_dict['commandType'] == 'A_command':
+            if parsed_dict['symbol'] not in Code.table:
+                if parsed_dict['symbol'].isnumeric():
+                    address = int(parsed_dict['symbol'])
+                else:
+                    address = Code.labels_counter
+                    Code.labels_counter += 1
+                code = Code.get_address(address)
+                Code.table[parsed_dict['symbol']] = code
+            else:
+                code = Code.table[parsed_dict['symbol']]
+        elif parsed_dict['commandType'] == 'L_command':
+            address = SymbolTable.symbolTable[parsed_dict['symbol']]
+            code = Code.get_address(address)
+        if code:
+            code_final = code + '\n' 
+        return code_final
 
 
 class Parser():
@@ -274,7 +267,7 @@ class Parser():
 
     Exp. @100 = {commandType: A_command, symbol: '100'}
          M=1  = {'commandType': 'C_command', 'dest': 'M', 'comp': '1', 'jump': False}
-         @LOOP  = {commandType: L_command, symbol: 'LOOP'}
+         (LOOP)  = {commandType: L_command, symbol: 'LOOP'}
     """
     
     def parse(command):
@@ -283,32 +276,44 @@ class Parser():
         # Empty, spaces, comment
         if not command or command[0] == ' ' or command[0] == '/' or command[0] == '\n':
             return parsed_command
+        # Strip everything from space
+        command = command.split(" ", 1)[0]
         if command[0] == '@':
-            if command[1:].isupper():
-                parsed_command['commandType'] = 'L_command'
-            else:
-                parsed_command['commandType'] = 'A_command'
-        else:
-            parsed_command['commandType'] = 'C_command'  
-        if parsed_command['commandType'] == 'A_command' or parsed_command['commandType'] == 'L_command':
-            
             symbol = command[1:].rstrip()
+            # if this command is allready in SymbolTable, it is Label type command
+            if symbol not in SymbolTable.symbolTable:
+                parsed_command['commandType'] = 'A_command'
+                parsed_command['symbol'] = symbol
+            else:
+                parsed_command['commandType'] = 'L_command'
+                parsed_command['symbol'] = symbol
+        # It is label, which don;t generate binary code        
+        elif command[0] == '(':
+            parsed_command['commandType'] = 'L0_command'
+            symbol = command.rstrip()[1:-1]
             parsed_command['symbol'] = symbol
         else:
-            if command[1] == '=':
-                parsed_command["dest"] = command[0]
-                parsed_command["comp"] = command[2:]
+            parsed_command['commandType'] = 'C_command'  
+            if command[1] == '=' or command[2] == '=' or command[3] == '=':
+                parsed_command["dest"] = command.split('=')[0]
+                parsed_command["comp"] = command.split('=')[1]
                 parsed_command["jump"] = False
             else:
                 parsed_command["dest"] = False
                 parsed_command["comp"] = command[0]
                 parsed_command["jump"] = command[2:]
-
-        print("parsed_command", parsed_command)
         return parsed_command
 
 
 class Assembler():
+
+    def reset():
+
+        SymbolTable.symbolTable = {}
+        SymbolTable.instructions_counter = 0
+        Code.labels_counter = LABELS_MEMORY_START
+        Code.table = Code.get_predifined_symbols()
+        print("Reseting", Code.labels_counter)
 
     """ 
     Return path to open and realitive path to given file
@@ -357,17 +362,13 @@ class Assembler():
         if os.path.exists(file_to_write):
             os.remove(file_to_write)
         # reset server for unit tests
-        SymbolTable.reset()
-        # First pass - go line by line and update memory_counter + Symbolic table
+        Assembler.reset()
+        # First pass - go line by line and update Symbolic table
         try:
             with open(file_to_open) as f1:
                 for line in f1:
                     ln = line.strip()
-                    # print("my ln", ln)
-                    # print(not bool(ln))
                     if ln and not ln[0] == '/':
-                        # print("ln", ln)
-                        SymbolTable.update_counter(ln)
                         SymbolTable.updateSymbolTable(ln)
 
         except IOError:
@@ -375,13 +376,13 @@ class Assembler():
 
         # Second pass         
         try:
-            print("file to open", file_to_open, 'file_to_write', file_to_write)
+            # print("file to open", file_to_open, 'file_to_write', file_to_write)
             with open(file_to_open) as f:               
                 for line in f:
                     ln = line.strip()
                     parsed_command = Parser.parse(ln)
                     if parsed_command:
-                        code = Code.get_code(parsed_command) + '\n'
+                        code = Code.get_code(parsed_command)
                         with open(file_to_write, 'a') as fw:
                             fw.write(code)
         except IOError:

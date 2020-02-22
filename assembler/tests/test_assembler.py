@@ -2,9 +2,26 @@ import unittest
 import os
 from os import path
 from .. import assembler as ass
+reset = ass.Assembler.reset
+updateSymbolTable = ass.SymbolTable.updateSymbolTable
+parse = ass.Parser.parse
+get_code = ass.Code.get_code
 
 
 class TestMyClass(unittest.TestCase):
+
+    def answers(self, file_to_parse, parsed_file, answer):
+        ass.Assembler.main(file_to_parse)
+        file_result = os.getcwd() + parsed_file
+        file_answer = os.getcwd() + answer
+        f_result = open(file_result, 'r')
+        f_answer = open(file_answer, 'r')
+
+        for line in f_result:
+            self.assertEqual(line, f_answer.readline())
+
+        f_result.close()
+        f_answer.close()
 
     def test_main_create_file(self):
 
@@ -50,15 +67,15 @@ class TestMyClass(unittest.TestCase):
 
     def test_parser_L_command(self):
 
-        com = ass.Parser.parse('@END')
-        is_type = 'commandType' in com and 'L_command' == com['commandType']
+        com = ass.Parser.parse('(END)')
+        is_type = 'commandType' in com and 'L0_command' == com['commandType']
         is_symbol = 'symbol' in com and 'END' == com['symbol']
 
         self.assertTrue(is_type)
         self.assertTrue(is_symbol)
 
-        com = ass.Parser.parse('@LOOP')
-        is_type = 'commandType' in com and 'L_command' == com['commandType']
+        com = ass.Parser.parse('(LOOP)')
+        is_type = 'commandType' in com and 'L0_command' == com['commandType']
         is_symbol = 'symbol' in com and 'LOOP' == com['symbol']
 
         self.assertTrue(is_type)
@@ -90,6 +107,19 @@ class TestMyClass(unittest.TestCase):
         self.assertTrue(is_comp)
         self.assertTrue(is_jump)
 
+    def test_parser_C_command3(self):
+
+        com = ass.Parser.parse('D=M')
+        is_type = 'commandType' in com and 'C_command' == com['commandType']
+        is_dest = 'dest' and 'D' == com['dest']
+        is_comp = 'comp' in com and 'M' == com['comp']
+        is_jump = 'jump' and com['jump'] == False
+
+        self.assertTrue(is_type)
+        self.assertTrue(is_dest)
+        self.assertTrue(is_comp)
+        self.assertTrue(is_jump)
+
     def test_parser_A_command3(self):
 
         com = ass.Parser.parse('@i')
@@ -113,16 +143,35 @@ class TestMyClass(unittest.TestCase):
         self.assertTrue(is_comp)
         self.assertTrue(is_jump)
 
+    def test_parser_C_command5(self):
+
+        com = ass.Parser.parse('AM=M-1')
+        is_type = 'commandType' in com and 'C_command' == com['commandType']
+        is_dest = 'dest' in com and 'AM' == com['dest']
+        is_comp = 'comp' in com and 'M-1' == com['comp']
+        is_jump = 'jump' and com['jump'] == False
+
+        self.assertTrue(is_type)
+        self.assertTrue(is_dest)
+        self.assertTrue(is_comp)
+        self.assertTrue(is_jump)    
+
     def test_code(self):
 
         code = ass.Code.get_code({'commandType': 'C_command', 'dest': 'M', 'comp': '1', 'jump': False})
-        self.assertEqual('1110111111001000', code)
+        self.assertEqual('1110111111001000\n', code)
 
         code = ass.Code.get_code({'commandType': 'C_command', 'dest': 'M', 'comp': '0', 'jump': False})
-        self.assertEqual('1110101010001000', code)
+        self.assertEqual('1110101010001000\n', code)
 
         code = ass.Code.get_code({'commandType': 'C_command', 'dest': False, 'comp': '0', 'jump': 'JMP'})
-        self.assertEqual('1110101010000111', code)
+        self.assertEqual('1110101010000111\n', code)
+
+        code = ass.Code.get_code({'commandType': 'C_command', 'dest': 'D', 'comp': 'M', 'jump': False})
+        self.assertEqual('1111110000010000\n', code)
+
+        code = ass.Code.get_code({'commandType': 'C_command', 'dest': 'AM', 'comp': 'M-1', 'jump': False})
+        self.assertEqual('1111110010101000\n', code)
 
     def test_dest(self):
 
@@ -177,202 +226,108 @@ class TestMyClass(unittest.TestCase):
 
     def test_symbol_table_basic(self):
         
-        ass.SymbolTable.reset()
-        ass.SymbolTable.update_counter('@i')
-        ass.SymbolTable.updateSymbolTable('@i')
-        address = ass.SymbolTable.symbolTable['i']
+        reset()
+        updateSymbolTable('@i')
+        table_len = len(ass.SymbolTable.symbolTable)
         count = ass.SymbolTable.instructions_counter
         self.assertEqual(1, count)
-        self.assertEqual('0000000000010000', address)
+        self.assertEqual(0, table_len)
 
-        ass.SymbolTable.update_counter('@sum')
-        ass.SymbolTable.updateSymbolTable('@sum')
-        address = ass.SymbolTable.symbolTable['sum']
+        updateSymbolTable('@sum')
+        table_len = len(ass.SymbolTable.symbolTable)
         count = ass.SymbolTable.instructions_counter
         self.assertEqual(2, count)
-        self.assertEqual('0000000000010001', address)
+        self.assertEqual(0, table_len)
+
+        updateSymbolTable('(LOOP)')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count0 = ass.SymbolTable.instructions_counter
+        count1 = ass.SymbolTable.symbolTable['LOOP']
+        self.assertEqual(2, count0)
+        self.assertEqual(1, table_len)
+        self.assertEqual(2, count1)
+
+        updateSymbolTable('@LOOP')
+        table_len = len(ass.SymbolTable.symbolTable)
+        count0 = ass.SymbolTable.instructions_counter
+        count1 = ass.SymbolTable.symbolTable['LOOP']
+        self.assertEqual(3, count0)
+        self.assertEqual(1, table_len)
+        self.assertEqual(2, count1)
 
     def test_symbol_table_1(self):
 
-        ass.SymbolTable.reset()
-        ass.SymbolTable.update_counter('@i')
-        ass.SymbolTable.updateSymbolTable('@i')
-        address = ass.SymbolTable.symbolTable['i']
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(1, count)
-        self.assertEqual('0000000000010000', address)
+        reset()
+        parsed_dict = parse('@i')
+        address = get_code(parsed_dict)
+        self.assertEqual('0000000000010000\n', address)
 
-        ass.SymbolTable.update_counter('M=1')
-        ass.SymbolTable.updateSymbolTable('M=1')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(2, count)
-        self.assertEqual(24, table_len)
-        
-        ass.SymbolTable.update_counter('@sum')
-        ass.SymbolTable.updateSymbolTable('@sum')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        address = ass.SymbolTable.symbolTable['sum']
-        self.assertEqual(3, count)
-        self.assertEqual(25, table_len)
-        self.assertEqual('0000000000010001', address)
+        parsed_dict = parse('@sum')
+        address = get_code(parsed_dict)
+        self.assertEqual('0000000000010001\n', address)
+    
+        # parsed_dict = parse('(LOOP)')
+        # ass.SymbolTable.instructions_counter = 4
+        # updateSymbolTable('(LOOP)')
+        # address = get_code(parsed_dict)
+        # self.assertEqual('0000000000000100\n', address)
 
-        ass.SymbolTable.update_counter('M=0')
-        ass.SymbolTable.updateSymbolTable('M=0')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(4, count)
-        self.assertEqual(25, table_len)
+        parsed_dict = parse('@100')
+        address = get_code(parsed_dict)
+        self.assertEqual('0000000001100100\n', address)
 
-        ass.SymbolTable.update_counter('(LOOP)')
-        ass.SymbolTable.updateSymbolTable('(LOOP)')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        address = ass.SymbolTable.symbolTable['LOOP']
-        self.assertEqual(4, count)
-        self.assertEqual(26, table_len)
-        self.assertEqual('0000000000000100', address) #decimal - 4
-
-        ass.SymbolTable.update_counter('@i')
-        ass.SymbolTable.updateSymbolTable('@i')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        address = ass.SymbolTable.symbolTable['i']
-        self.assertEqual(5, count)
-        self.assertEqual(26, table_len)
-        self.assertEqual('0000000000010000', address)
-
-        ass.SymbolTable.update_counter('D=M')
-        ass.SymbolTable.updateSymbolTable('D=M')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(6, count)
-        self.assertEqual(26, table_len)
-
-        ass.SymbolTable.update_counter('@100')
-        ass.SymbolTable.updateSymbolTable('@100')
-        table_len = len(ass.SymbolTable.symbolTable)
-        count = ass.SymbolTable.instructions_counter
-        address = ass.SymbolTable.symbolTable['100']
-        self.assertEqual(7, count)
-        self.assertEqual(27, table_len)
-        self.assertEqual('0000000001100100', address)
-
-    def test_symbol_table_2(self):
-
-        ass.SymbolTable.reset()
-        ass.SymbolTable.instructions_counter = 18
-        ass.SymbolTable.update_counter('(END)')
-        ass.SymbolTable.updateSymbolTable('(END)')
-        address = ass.SymbolTable.symbolTable['END']
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(18, count)
-        self.assertEqual('0000000000010010', address)
-
-        ass.SymbolTable.update_counter('@END')
-        ass.SymbolTable.updateSymbolTable('@END')
-        address = ass.SymbolTable.symbolTable['END']
-        count = ass.SymbolTable.instructions_counter
-        self.assertEqual(19, count)
-        self.assertEqual('0000000000010010', address)
- 
-        # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'i'}, 0)
-        # self.assertEqual('0000000000010000', address)
-
-        # address = ass.SymbolTable.updateSymbolTable({'commandType': 'A_command', 'symbol': 'sum'}, 1)
-        # self.assertEqual('0000000000010001', address)
+        parsed_dict = parse('@sum')
+        address = get_code(parsed_dict)
+        self.assertEqual('0000000000010001\n', address)        
 
     def test_get_address(self):
-        address = ass.SymbolTable.get_address(0)
+        address = ass.Code.get_address(0)
         self.assertEqual('0000000000000000', address)
 
-        address = ass.SymbolTable.get_address(1)
+        address = ass.Code.get_address(1)
         self.assertEqual('0000000000000001', address)
 
-        address = ass.SymbolTable.get_address(2)
+        address = ass.Code.get_address(2)
         self.assertEqual('0000000000000010', address)
 
-        address = ass.SymbolTable.get_address(100)
+        address = ass.Code.get_address(100)
         self.assertEqual('0000000001100100', address)
 
     def test_main_basic(self):
-
-        ass.Assembler.main('A_instr.asm')
-        file_result = os.getcwd() + "/tests/files/A_instr.hack"
-        file_answer = os.getcwd() + "/tests/files/A_instr_answ.hack"
-        f_result = open(file_result, 'r')
-        f_answer = open(file_answer, 'r')
-
-        lines_count = 0
-        for line in f_result:
-            lines_count += 1
-        f_result.seek(0)    
-        for i in range(lines_count):
-            self.assertEqual(f_result.readline(), f_answer.readline())
-        f_result.close()
-        f_answer.close()
+        self.answers('A_instr.asm', "/tests/files/A_instr.hack", "/tests/files/A_instr.hack")
 
     def test_main_add(self):
+        self.answers('Add.asm', "/tests/files/Add.hack", "/tests/files/Add_answ.hack")
 
-        ass.Assembler.main('Add.asm')
-        file_result = os.getcwd() + "/tests/files/Add.hack"
-        file_answer = os.getcwd() + "/tests/files/Add_answ.hack"
-        f_result = open(file_result, 'r')
-        f_answer = open(file_answer, 'r')
+    def test_main_dm(self):
+        self.answers('DM_instr.asm', "/tests/files/DM_instr.hack", "/tests/files/DM_instr_answ.hack")
 
-        lines_count = 0
-        for line in f_result:
-            lines_count += 1
-        f_result.seek(0)    
-        for i in range(lines_count):
-            self.assertEqual(f_result.readline(), f_answer.readline())
-        f_result.close()
-        f_answer.close()
+    def test_main_am(self): #AM=M-1
+        self.answers('AM_instr.asm', "/tests/files/AM_instr.hack", "/tests/files/AM_instr_answ.hack")    
            
     def test_main_max(self):
-
-        ass.Assembler.main('Max.asm')
-        file_result = os.getcwd() + "/tests/files/Max.hack"
-        file_answer = os.getcwd() + "/tests/files/Max_answ.hack"
-        f_result = open(file_result, 'r')
-        f_answer = open(file_answer, 'r')
-
-        lines_count = 0
-        for line in f_result:
-            lines_count += 1
-        f_result.seek(0)    
-        for i in range(lines_count):
-            self.assertEqual(f_result.readline(), f_answer.readline())
-        f_result.close()
-        f_answer.close()
+        self.answers('Max.asm', "/tests/files/Max.hack", "/tests/files/Max_answ.hack")
 
     def test_main_maxl(self):
-
-        ass.Assembler.main('MaxL.asm')
-        file_result = os.getcwd() + "/tests/files/MaxL.hack"
-        file_answer = os.getcwd() + "/tests/files/MaxL_answ.hack"
-        f_result = open(file_result, 'r')
-        f_answer = open(file_answer, 'r')
-
-        lines_count = 0
-        for line in f_result:
-            lines_count += 1
-        f_result.seek(0)    
-        for i in range(lines_count):
-            print("lines_count", lines_count)
-            self.assertEqual(f_result.readline(), f_answer.readline())
-        f_result.close()
-        f_answer.close()
+        self.answers('MaxL.asm', "/tests/files/MaxL.hack", "/tests/files/MaxL_answ.hack")
 
     def test_predefined_table(self):
         
-        t = ass.SymbolTable.get_predifined_symbols()
+        t = ass.Code.get_predifined_symbols()
 
         self.assertEqual('0000000000000000', t['R0'])
         self.assertEqual('0000000000000001', t['R1'])
         self.assertEqual('0000000000001100', t['R12'])
         self.assertEqual('0000000000001111', t['R15'])
+
+    def test_main_pong(self):
+        
+        self.answers('Pong.asm', "/tests/files/Pong.hack", "/tests/files/Pong_answ.hack")
+
+    def test_main_rect(self):
+        
+        self.answers('Rect.asm', "/tests/files/Rect.hack", "/tests/files/Rect_answ.hack")   
+        self.answers('RectL.asm', "/tests/files/RectL.hack", "/tests/files/RectL_answ.hack")   
 
 if __name__ == '__main__':
     unittest.main()
