@@ -3,7 +3,7 @@
 # conda deactivate
 # python -m pytest
 # pytest -k  "debug"
-# /tests/files/Add.asm
+
 import sys
 import os
 
