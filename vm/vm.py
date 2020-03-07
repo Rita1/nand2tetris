@@ -206,6 +206,37 @@ class WriteCode():
                 code = code + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
                 + "@SP\nA=M-1\nM=0\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
                 + "@SP\nA=M-1\nM=-1\n" +  "(" + funct_name + "2" + ")\n" + "@SP\n"
+            elif arg1 == "and" or arg1 == "or":
+                arg1 = str(arg1)
+                funct_name = arg1.upper() + str(self.funct_c) + "_"
+                self.funct_c += 1
+
+                code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\nD=D+M\n"
+                if arg1 == "and":
+                    code = code + "@2\nD=D-A\n"
+                code = code + "@" + funct_name + "0\n" + "D;JEQ\n" \
+                + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
+                + "@SP\nA=M-1\n"
+                if arg1 == "and":
+                    code = code + "M=1\n"
+                elif arg1 == "or":
+                    code = code + "M=0\n"
+                code = code + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
+                + "@SP\nA=M-1\n"
+                if arg1 == "and":
+                    code = code + "M=0\n"
+                elif arg1 == "or":
+                    code = code + "M=1\n"
+                code = code + "(" + funct_name + "2" + ")\n" + "@SP\n"
+            else:
+                arg1 = str(arg1)
+                funct_name = arg1.upper() + str(self.funct_c) + "_"
+                self.funct_c += 1
+
+                code = "@SP\nM=M-1\nD=M\n" + "@" + funct_name + "0\n" + "D;JEQ\n" \
+                + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
+                + "@SP\nA=M-1\nM=1\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
+                + "@SP\nA=M-1\nM=0\n" + "(" + funct_name + "2" + ")\n" + "@SP\n"
 
 
         with open(file_to_write, 'a') as fw:
