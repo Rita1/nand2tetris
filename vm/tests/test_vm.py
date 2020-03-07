@@ -52,11 +52,17 @@ class TestMain(unittest.TestCase):
         self.answers('Sub.vm', "/tests/files/Sub.asm", "/tests/files/Sub_answ.asm")
         self.answers('Neg.vm', "/tests/files/Neg.asm", "/tests/files/Neg_answ.asm")
 
-    def test_main_logical(self):
+    def test_main_compare(self):
 
         self.answers('Eq.vm', "/tests/files/Eq.asm", "/tests/files/Eq_answ.asm")
         self.answers('Gt.vm', "/tests/files/Gt.asm", "/tests/files/Gt_answ.asm")
         self.answers('Lt.vm', "/tests/files/Lt.asm", "/tests/files/Lt_answ.asm")
+
+    def test_main_logic(self):
+
+        self.answers('And.vm', "/tests/files/And.asm", "/tests/files/And_answ.asm")
+        self.answers('Or.vm', "/tests/files/Or.asm", "/tests/files/Or_answ.asm")
+        self.answers('Not.vm', "/tests/files/Not.asm", "/tests/files/Not_answ.asm")
     
     def test_parse_other(self):
         # Empty

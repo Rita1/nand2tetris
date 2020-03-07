@@ -40,6 +40,7 @@ class Main():
             os.remove(file_to_write)
         # reset server for unit tests
         self.reset(file_to_write)
+        w = WriteCode()
         # print("to_parse, file_to_parse, file_to_write", to_parse, files_to_parse, file_to_write)
         for f in files_to_parse:
             
@@ -50,7 +51,7 @@ class Main():
                         ln = Parse().parse(line)
                         # print("ln")
                         if ln:
-                            WriteCode().code(f1, ln, file_to_write)
+                            w.code(f1, ln, file_to_write)
                         
             except IOError:
                 print("File or directory is missing")
@@ -138,6 +139,11 @@ class Parse():
 class WriteCode():
 
 
+    "Functions counter"
+
+    funct_c = 0
+
+
     """
     Parse given dict and file_name to assembly code and write to file
     
@@ -167,22 +173,39 @@ class WriteCode():
 
     def code(self, file_name, parsed_dict, file_to_write):
         code = ''
-        if parsed_dict["type"] == "C_PUSH":
-           code = '@' + parsed_dict["arg2"] + '\n'
+        c_type = parsed_dict["type"]
+        arg1 = parsed_dict["arg1"]
+        arg2 = "arg2" in parsed_dict and parsed_dict["arg2"]
+        if c_type == "C_PUSH":
+           code = '@' + arg2 + '\n'
            code = code + 'D=A\n@SP\nA=M\nM=D\n@SP\n@M=M+1\n'
-           print("C_PUSH code", code)
-        elif parsed_dict["type"] == "C_ARITHMETIC":
-            if parsed_dict["arg1"] == "add" or parsed_dict["arg1"] == "sub":
+        #    print("C_PUSH code", code)
+        elif c_type  == "C_ARITHMETIC":
+            if arg1 == "add" or arg1 == "sub":
                 code = "@SP\nM=M+1\n@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
-                if parsed_dict["arg1"] == "add":
+                if arg1 == "add":
                     code = code + "D=D+M\n"
                 else:
                     code = code + "D=M-D\n"
                 code = code + "M=D\n"
-            elif parsed_dict["arg1"] == "neg":
+            elif arg1 == "neg":
                 code = "@SP\nA=M-1\nD=M\n@SP\nD=A-D\nA=M-1\nM=D\n"    
-            elif parsed_dict["arg1"] == "eq" or parsed_dict["arg1"] == "lt" or parsed_dict["arg1"] == "gt":
-                code = ""
+            elif arg1 == "eq" or arg1 == "lt" or arg1 == "gt":
+                arg1 = str(arg1)
+                funct_name = arg1.upper() + str(self.funct_c) + "_"
+                self.funct_c += 1
+
+                code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\nD=D-M\n"
+                code = code + "@" + funct_name + "0\n"
+                if arg1 == "eq":
+                    code = code + "D;JEQ\n"
+                elif arg1 == "lt":
+                    code = code + "D;JGT\n"
+                else:
+                    code = code + "D;JLT\n"
+                code = code + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
+                + "@SP\nA=M-1\nM=0\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
+                + "@SP\nA=M-1\nM=-1\n" +  "(" + funct_name + "2" + ")\n" + "@SP\n"
 
 
         with open(file_to_write, 'a') as fw:
