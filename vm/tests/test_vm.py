@@ -15,7 +15,13 @@ class TestMain(unittest.TestCase):
 
         for line in f_result:
             ln = f_answer.readline()
-            ln = line.split("//", 1)[0]
+            ln = line.split("//")[0]
+            ln = ln.strip() + '\n'
+            self.assertEqual(line, ln)
+
+        for line in f_answer:
+            ln = f_result.readline()
+            ln = line.split("//")[0]
             ln = ln.strip() + '\n'
             self.assertEqual(line, ln)
 
@@ -34,13 +40,24 @@ class TestMain(unittest.TestCase):
         f = os.getcwd() + "/tests/files/ManyFiles/ManyFiles.asm"
         self.assertTrue(path.exists(f))
 
-    def test_main(self):
+    def test_main_basic(self):
 
         self.answers('Test.vm', "/tests/files/Test.asm", "/tests/files/Test_answ.asm")
         self.answers('Push.vm', "/tests/files/Push.asm", "/tests/files/Push_answ.asm")
+
+
+    def test_main_arit(self):
+
         self.answers('Add.vm', "/tests/files/Add.asm", "/tests/files/Add_answ.asm")
+        self.answers('Sub.vm', "/tests/files/Sub.asm", "/tests/files/Sub_answ.asm")
+        self.answers('Neg.vm', "/tests/files/Neg.asm", "/tests/files/Neg_answ.asm")
 
+    def test_main_logical(self):
 
+        self.answers('Eq.vm', "/tests/files/Eq.asm", "/tests/files/Eq_answ.asm")
+        self.answers('Gt.vm', "/tests/files/Gt.asm", "/tests/files/Gt_answ.asm")
+        self.answers('Lt.vm', "/tests/files/Lt.asm", "/tests/files/Lt_answ.asm")
+    
     def test_parse_other(self):
         # Empty
         c = vm.Parse().parse("")

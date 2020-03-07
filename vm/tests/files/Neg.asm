@@ -9,7 +9,7 @@ A=M
 M=D
 @SP
 @M=M+1
-@8
+@4
 D=A
 @SP
 A=M
@@ -17,12 +17,9 @@ M=D
 @SP
 @M=M+1
 @SP
-M=M+1
-@SP
-M=M-1
-A=M
+A=M-1
 D=M
-M=0
-A=A-1
-D=D+M
+@SP
+D=A-D
+A=M-1
 M=D

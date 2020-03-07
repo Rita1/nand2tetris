@@ -43,7 +43,7 @@ class Main():
         # print("to_parse, file_to_parse, file_to_write", to_parse, files_to_parse, file_to_write)
         for f in files_to_parse:
             
-            print("file_to_open", f)
+            # print("file_to_open", f)
             try:
                 with open(file_to_open) as f1:
                     for line in f1:
@@ -153,16 +153,13 @@ class WriteCode():
     M=M+1
 
     {'type': 'C_ARITHMETIC', 'arg1': 'add'}
-    @SP
+    @SP // Add - 258
+    M=M-1 // 257
     A=M
     D=M
     M=0
-    @SP
-    A=M-1
+    A=A-1 // 256
     D=D+M
-    M=D
-    @SP // Update pointer
-    D=M-1
     M=D
 
 
@@ -173,7 +170,21 @@ class WriteCode():
         if parsed_dict["type"] == "C_PUSH":
            code = '@' + parsed_dict["arg2"] + '\n'
            code = code + 'D=A\n@SP\nA=M\nM=D\n@SP\n@M=M+1\n'
-           print("code", code)
+           print("C_PUSH code", code)
+        elif parsed_dict["type"] == "C_ARITHMETIC":
+            if parsed_dict["arg1"] == "add" or parsed_dict["arg1"] == "sub":
+                code = "@SP\nM=M+1\n@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
+                if parsed_dict["arg1"] == "add":
+                    code = code + "D=D+M\n"
+                else:
+                    code = code + "D=M-D\n"
+                code = code + "M=D\n"
+            elif parsed_dict["arg1"] == "neg":
+                code = "@SP\nA=M-1\nD=M\n@SP\nD=A-D\nA=M-1\nM=D\n"    
+            elif parsed_dict["arg1"] == "eq" or parsed_dict["arg1"] == "lt" or parsed_dict["arg1"] == "gt":
+                code = ""
+
+
         with open(file_to_write, 'a') as fw:
             fw.write(code)
 

@@ -2,14 +2,14 @@
 D=A
 @SP
 M=D
-@7
+@8
 D=A
 @SP
 A=M
 M=D
 @SP
 @M=M+1
-@8
+@7
 D=A
 @SP
 A=M
@@ -24,5 +24,5 @@ A=M
 D=M
 M=0
 A=A-1
-D=D+M
+D=M-D
 M=D
