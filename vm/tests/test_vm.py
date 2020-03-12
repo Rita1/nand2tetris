@@ -15,13 +15,13 @@ class TestMain(unittest.TestCase):
 
         for line in f_result:
             ln = f_answer.readline()
-            ln = line.split("//")[0]
+            ln = ln.split("//")[0]
             ln = ln.strip() + '\n'
             self.assertEqual(line, ln)
 
         for line in f_answer:
             ln = f_result.readline()
-            ln = line.split("//")[0]
+            ln = ln.split("//")[0]
             ln = ln.strip() + '\n'
             self.assertEqual(line, ln)
 
@@ -63,6 +63,11 @@ class TestMain(unittest.TestCase):
         self.answers('And.vm', "/tests/files/And.asm", "/tests/files/And_answ.asm")
         self.answers('Or.vm', "/tests/files/Or.asm", "/tests/files/Or_answ.asm")
         self.answers('Not.vm', "/tests/files/Not.asm", "/tests/files/Not_answ.asm")
+    
+    def test_pop_local(self):
+
+        self.answers('Pop.vm', "/tests/files/Pop.asm", "/tests/files/Pop_answ.asm")
+        
     
     def test_parse_other(self):
         # Empty
@@ -107,6 +112,20 @@ class TestMain(unittest.TestCase):
         self.assertTrue(is_type)
         self.assertTrue(is_arg1)
         self.assertTrue(is_arg2)
+
+    
+    def test_parse_pop(self):
+
+        c = vm.Parse().parse("pop local 0")
+        # print("c", c)
+        is_type = 'type' in c and 'C_POP' == c["type"]
+        is_arg1 = 'arg1' in c and 'local' == c["arg1"]
+        is_arg2 = 'arg2' in c and '0' == c["arg2"]
+
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+        self.assertTrue(is_arg2)
+            
 
     def test_parse_arit(self):
         

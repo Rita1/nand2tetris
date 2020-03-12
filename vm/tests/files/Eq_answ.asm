@@ -1,4 +1,3 @@
-//
 @256
 D=A
 @SP // 256
@@ -31,13 +30,13 @@ D;JEQ
 (EQ0_0)
 @SP
 A=M-1
-M=0
+M=-1
 @EQ0_2
 0;JMP
 (EQ0_1)
 @SP
 A=M-1
-M=-1
+M=0
 (EQ0_2)
 @SP
 @4 // Constant 3
@@ -68,12 +67,12 @@ D;JEQ
 (EQ1_0)
 @SP
 A=M-1
-M=0
+M=-1
 @EQ1_2
 0;JMP
 (EQ1_1)
 @SP
 A=M-1
-M=-1
+M=0
 (EQ1_2)
 @SP

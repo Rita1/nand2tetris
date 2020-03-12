@@ -130,6 +130,10 @@ class Parse():
                 command["type"] = 'C_PUSH'
                 command["arg1"] = list_commands[1]
                 command["arg2"] = list_commands[2]
+            elif list_commands[0] == 'pop':
+                command["type"] = 'C_POP'
+                command["arg1"] = list_commands[1]
+                command["arg2"] = list_commands[2]
             else:
                 command["type"] = 'C_ARITHMETIC'
                 command["arg1"] = ln
@@ -142,8 +146,7 @@ class WriteCode():
     "Functions counter"
 
     funct_c = 0
-
-
+    
     """
     Parse given dict and file_name to assembly code and write to file
     
@@ -176,73 +179,89 @@ class WriteCode():
         c_type = parsed_dict["type"]
         arg1 = parsed_dict["arg1"]
         arg2 = "arg2" in parsed_dict and parsed_dict["arg2"]
-        if c_type == "C_PUSH":
-           code = '@' + arg2 + '\n'
-           code = code + 'D=A\n@SP\nA=M\nM=D\n@SP\n@M=M+1\n'
+        if c_type == "C_PUSH" or c_type == 'C_POP':
+            code = self.push_pop(c_type, arg1, arg2)
         #    print("C_PUSH code", code)
         elif c_type  == "C_ARITHMETIC":
-            if arg1 == "add" or arg1 == "sub":
-                code = "@SP\nM=M+1\n@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
-                if arg1 == "add":
-                    code = code + "D=D+M\n"
-                else:
-                    code = code + "D=M-D\n"
-                code = code + "M=D\n"
-            elif arg1 == "neg":
-                code = "@SP\nA=M-1\nD=M\n@SP\nD=A-D\nA=M-1\nM=D\n"    
-            elif arg1 == "eq" or arg1 == "lt" or arg1 == "gt":
-                arg1 = str(arg1)
-                funct_name = arg1.upper() + str(self.funct_c) + "_"
-                self.funct_c += 1
-
-                code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\nD=D-M\n"
-                code = code + "@" + funct_name + "0\n"
-                if arg1 == "eq":
-                    code = code + "D;JEQ\n"
-                elif arg1 == "lt":
-                    code = code + "D;JGT\n"
-                else:
-                    code = code + "D;JLT\n"
-                code = code + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
-                + "@SP\nA=M-1\nM=0\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
-                + "@SP\nA=M-1\nM=-1\n" +  "(" + funct_name + "2" + ")\n" + "@SP\n"
-            elif arg1 == "and" or arg1 == "or":
-                arg1 = str(arg1)
-                funct_name = arg1.upper() + str(self.funct_c) + "_"
-                self.funct_c += 1
-
-                code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\nD=D+M\n"
-                if arg1 == "and":
-                    code = code + "@2\nD=D-A\n"
-                code = code + "@" + funct_name + "0\n" + "D;JEQ\n" \
-                + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
-                + "@SP\nA=M-1\n"
-                if arg1 == "and":
-                    code = code + "M=1\n"
-                elif arg1 == "or":
-                    code = code + "M=0\n"
-                code = code + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
-                + "@SP\nA=M-1\n"
-                if arg1 == "and":
-                    code = code + "M=0\n"
-                elif arg1 == "or":
-                    code = code + "M=1\n"
-                code = code + "(" + funct_name + "2" + ")\n" + "@SP\n"
-            else:
-                arg1 = str(arg1)
-                funct_name = arg1.upper() + str(self.funct_c) + "_"
-                self.funct_c += 1
-
-                code = "@SP\nM=M-1\nD=M\n" + "@" + funct_name + "0\n" + "D;JEQ\n" \
-                + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
-                + "@SP\nA=M-1\nM=1\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
-                + "@SP\nA=M-1\nM=0\n" + "(" + funct_name + "2" + ")\n" + "@SP\n"
-
+            code = self.aritmetic(c_type, arg1, arg2)
 
         with open(file_to_write, 'a') as fw:
             fw.write(code)
 
-        return ""       
+        return ""
+
+    def push_pop(self, c_type, arg1, arg2):
+        print("Comand", c_type, arg1, arg2)
+        code = ""
+        base = '@' + arg2 + '\n'
+        if c_type == "C_PUSH":
+            if arg1 == 'constant':
+                code = base + 'D=A\n'
+            elif arg1 == 'local':
+                code = base + 'D=A\n@LCL\nA=M+D\nD=M\n'
+            code = code + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+        if c_type == "C_POP":
+            code = base + "D=A\n"
+            if arg1 == 'local':
+                code = code + "@LCL\n"
+            elif arg1 == 'argument':
+                code = code + "@ARG\n"
+            elif arg1 == 'this':
+                code = code + '@THIS\n'
+            elif arg1 == 'that':
+                code = code + '@THAT\n'       
+            code = code + "D=M+D\n@R5\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R5\nA=M\nM=D\n"    
+        return code
+
+        # TODO ARG - RAM2, THIS - RAM3, THAT - RAM4 
+
+    def aritmetic(self, c_type, arg1, arg2):
+        code = ""
+        if arg1 == "add" or arg1 == "sub":
+            code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
+            if arg1 == "add":
+                code = code + "D=D+M\nM=D\n"
+            else:
+                code = code + "D=M-D\n"
+                code = code + "M=D\n"
+        elif arg1 == "neg":
+            code = "@SP\nA=M-1\nD=M\n@SP\nD=A-D\nA=M-1\nM=D\n"    
+        elif arg1 == "eq" or arg1 == "lt" or arg1 == "gt":
+            arg1 = str(arg1)
+            funct_name = arg1.upper() + str(self.funct_c) + "_"
+            self.funct_c += 1
+
+            code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\nD=D-M\n"
+            code = code + "@" + funct_name + "0\n"
+            if arg1 == "eq":
+                code = code + "D;JEQ\n"
+            elif arg1 == "lt":
+                code = code + "D;JGT\n"
+            else:
+                code = code + "D;JLT\n"
+            code = code + "@" + funct_name + "1\n" + "0;JMP\n" + "(" + funct_name + "0" + ")\n" \
+            + "@SP\nA=M-1\nM=-1\n" + "@" + funct_name + "2\n" + "0;JMP\n" + "(" + funct_name + "1" + ")\n" \
+            + "@SP\nA=M-1\nM=0\n" +  "(" + funct_name + "2" + ")\n" + "@SP\n"
+        elif arg1 == "and" or arg1 == "or":
+            arg1 = str(arg1)
+            funct_name = arg1.upper() + str(self.funct_c) + "_"
+            self.funct_c += 1
+
+            code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
+            if arg1 == "and":
+                code = code + "M=D&M\n"
+            else:
+                code = code + "M=D|M\n"    
+        # NOT 
+        else:  
+            arg1 = str(arg1)
+            funct_name = arg1.upper() + str(self.funct_c) + "_"
+            self.funct_c += 1
+
+            code = "@SP\nA=M-1\nM=!M\n" 
+        return code            
+
+
 
 if __name__ == "__main__":
     inst = Main()

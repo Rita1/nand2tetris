@@ -9,7 +9,7 @@ A=M
 M=D
 @SP
 M=M+1 // 257
-@8 // Constant 8
+@4 // Constant 8
 D=A
 @SP // 257
 A=M
