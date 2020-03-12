@@ -193,24 +193,34 @@ class WriteCode():
     def push_pop(self, c_type, arg1, arg2):
         print("Comand", c_type, arg1, arg2)
         code = ""
-        base = '@' + arg2 + '\n'
+        base = '@' + arg2 + '\n' + 'D=A\n'
+        base_temp = '@R' + arg2 + '\n'
         if c_type == "C_PUSH":
             if arg1 == 'constant':
-                code = base + 'D=A\n'
+                return base + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            elif arg1 == 'temp':
+                return base_temp + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'local':
-                code = base + 'D=A\n@LCL\nA=M+D\nD=M\n'
-            code = code + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
-        if c_type == "C_POP":
-            code = base + "D=A\n"
-            if arg1 == 'local':
-                code = code + "@LCL\n"
+                code = base + '@LCL\n'
             elif arg1 == 'argument':
-                code = code + "@ARG\n"
+                code = base + '@ARG\n'
+            elif arg1 == 'this':
+                code = base + '@THIS\n'
+            elif arg1 == 'that':
+                code = base + '@THAT\n'        
+            code = code + 'A=M+D\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+        if c_type == "C_POP":
+            if arg1 == 'temp':
+                return '@SP\nM=M-1\nA=M\nD=M\n' + base_temp + 'M=D\n'  
+            elif arg1 == 'local':
+                code = base + "@LCL\n"
+            elif arg1 == 'argument':
+                code = base + "@ARG\n"
             elif arg1 == 'this':
                 code = code + '@THIS\n'
             elif arg1 == 'that':
                 code = code + '@THAT\n'       
-            code = code + "D=M+D\n@R5\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R5\nA=M\nM=D\n"    
+            code = code + "D=M+D\n@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n"    
         return code
 
         # TODO ARG - RAM2, THIS - RAM3, THAT - RAM4 

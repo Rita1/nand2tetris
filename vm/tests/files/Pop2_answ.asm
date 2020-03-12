@@ -9,9 +9,9 @@ A=M
 M=D
 @SP
 M=M+1
-@0 // POP local 0
+@0 // Pop args 0
 D=A
-@LCL
+@ARG
 D=M+D
 @R13
 M=D
@@ -22,16 +22,16 @@ D=M
 @R13
 A=M
 M=D
-@20
+@20 // push constant 20
 D=A
 @SP
 A=M
 M=D
 @SP
 M=M+1
-@1 // POP local 1
+@1 // POP args 1
 D=A
-@LCL
+@ARG
 D=M+D
 @R13
 M=D
@@ -42,9 +42,9 @@ D=M
 @R13
 A=M
 M=D
-@1 // PUSH LOCAL 1
+@1 // PUSH args 1
 D=A
-@LCL
+@ARG
 A=M+D
 D=M
 @SP

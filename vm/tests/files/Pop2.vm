@@ -1,0 +1,5 @@
+push constant 10
+pop argument 0
+push constant 20
+pop argument 1
+push argument 1

@@ -64,10 +64,17 @@ class TestMain(unittest.TestCase):
         self.answers('Or.vm', "/tests/files/Or.asm", "/tests/files/Or_answ.asm")
         self.answers('Not.vm', "/tests/files/Not.asm", "/tests/files/Not_answ.asm")
     
-    def test_pop_local(self):
+    def test_pop_basic(self):
 
         self.answers('Pop.vm', "/tests/files/Pop.asm", "/tests/files/Pop_answ.asm")
+        self.answers('Pop2.vm', "/tests/files/Pop2.asm", "/tests/files/Pop2_answ.asm")
+        self.answers('BasicTest.vm', "/tests/files/BasicTest.asm", "/tests/files/Pop2_answ.asm")
+
+    def test_pop_temp(self):
+
+        self.answers('Pop_temp.vm', "/tests/files/Pop_temp.asm", "/tests/files/Pop_temp_answ.asm")
         
+
     
     def test_parse_other(self):
         # Empty
