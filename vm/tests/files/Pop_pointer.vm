@@ -1,0 +1,3 @@
+push constant 10
+pop pointer 1
+push pointer 1

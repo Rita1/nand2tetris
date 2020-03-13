@@ -13,9 +13,9 @@ M=M+1
 M=M-1
 A=M
 D=M
-@R6
+@R11
 M=D
-@R6
+@R11
 D=M
 @SP
 A=M

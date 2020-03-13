@@ -1,0 +1,6 @@
+push constant 10
+pop this 6
+push this 6
+push constant 20
+pop that 3
+push that 3

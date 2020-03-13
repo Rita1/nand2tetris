@@ -191,15 +191,25 @@ class WriteCode():
         return ""
 
     def push_pop(self, c_type, arg1, arg2):
-        print("Comand", c_type, arg1, arg2)
+        # print("Comand", c_type, arg1, arg2, "Pointer")
+        
         code = ""
         base = '@' + arg2 + '\n' + 'D=A\n'
-        base_temp = '@R' + arg2 + '\n'
+        base_temp = '@R' + str (int (arg2) + 5) + '\n'
+        base_p = ''
+        if arg1 == 'pointer':
+            if int(arg2) == 0:
+                base_p = "@THIS\n"
+            elif int(arg2) == 1:
+                base_p = '@THAT\n' 
+        # print("p_is", arg1 == 'pointer', "arg2?", arg2 == 1, "base_p", base_p)        
         if c_type == "C_PUSH":
             if arg1 == 'constant':
                 return base + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'temp':
                 return base_temp + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            elif arg1 == "pointer":
+                return base_p + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'local':
                 code = base + '@LCL\n'
             elif arg1 == 'argument':
@@ -211,15 +221,17 @@ class WriteCode():
             code = code + 'A=M+D\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
         if c_type == "C_POP":
             if arg1 == 'temp':
-                return '@SP\nM=M-1\nA=M\nD=M\n' + base_temp + 'M=D\n'  
+                return '@SP\nM=M-1\nA=M\nD=M\n' + base_temp + 'M=D\n'
+            if arg1 == 'pointer': 
+                return '@SP\nM=M-1\nA=M\nD=M\n' + base_p + 'M=D\n'
             elif arg1 == 'local':
                 code = base + "@LCL\n"
             elif arg1 == 'argument':
                 code = base + "@ARG\n"
             elif arg1 == 'this':
-                code = code + '@THIS\n'
+                code = base + '@THIS\n'
             elif arg1 == 'that':
-                code = code + '@THAT\n'       
+                code = base + '@THAT\n'       
             code = code + "D=M+D\n@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n"    
         return code
 

@@ -9,13 +9,13 @@ A=M
 M=D
 @SP
 M=M+1
-@SP // POP temp 6
+@SP
 M=M-1
 A=M
 D=M
-@R11
+@THAT
 M=D
-@R11 // PUSH temp 6
+@THAT
 D=M
 @SP
 A=M
