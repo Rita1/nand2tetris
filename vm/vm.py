@@ -46,7 +46,7 @@ class Main():
             
             # print("file_to_open", f)
             try:
-                with open(file_to_open) as f1:
+                with open(f) as f1:
                     for line in f1:
                         ln = Parse().parse(line)
                         # print("ln")
@@ -75,7 +75,7 @@ class Main():
             file_to_open = os.getcwd() + PATH + file_to_parse
             file_to_open_w = os.getcwd() + '/' + file_to_parse
             # 2. File is in working dir
-            print("file_to_parse, exits?", file_to_parse, os.path.exists(file_to_open_w), os.getcwd())
+            # print("file_to_parse, exits?", file_to_parse, os.path.exists(file_to_open_w), os.getcwd())
             if file_to_parse and os.path.exists(file_to_open_w):
                 file_to_open = file_to_open_w
                 path = os.getcwd() + '/'
@@ -125,7 +125,7 @@ class Parse():
         ln = ln.strip()
         if ln:
             list_commands = ln.split(" ")
-            print("l_c", list_commands)
+            # print("l_c", list_commands)
             if list_commands[0] == 'push':
                 command["type"] = 'C_PUSH'
                 command["arg1"] = list_commands[1]
@@ -180,7 +180,7 @@ class WriteCode():
         arg1 = parsed_dict["arg1"]
         arg2 = "arg2" in parsed_dict and parsed_dict["arg2"]
         if c_type == "C_PUSH" or c_type == 'C_POP':
-            code = self.push_pop(c_type, arg1, arg2)
+            code = self.push_pop(c_type, arg1, arg2, file_name)
         #    print("C_PUSH code", code)
         elif c_type  == "C_ARITHMETIC":
             code = self.aritmetic(c_type, arg1, arg2)
@@ -190,26 +190,38 @@ class WriteCode():
 
         return ""
 
-    def push_pop(self, c_type, arg1, arg2):
+    def push_pop(self, c_type, arg1, arg2, file_name):
         # print("Comand", c_type, arg1, arg2, "Pointer")
         
         code = ""
         base = '@' + arg2 + '\n' + 'D=A\n'
-        base_temp = '@R' + str (int (arg2) + 5) + '\n'
-        base_p = ''
+        print("base0", base)
         if arg1 == 'pointer':
             if int(arg2) == 0:
-                base_p = "@THIS\n"
+                base = "@THIS\n"
             elif int(arg2) == 1:
-                base_p = '@THAT\n' 
-        # print("p_is", arg1 == 'pointer', "arg2?", arg2 == 1, "base_p", base_p)        
+                base = '@THAT\n'
+            print("Base pointer", base)   
+        elif arg1 == 'static':
+            
+            f_name = os.path.split(file_name.name)[1][:-3]
+            print("file_name", f_name)
+            base = "@" + str(f_name) + "." + arg2 + "\n"
+            # base = "@"
+            print("base static", base)
+        elif arg1 == "temp":
+            base = '@R' + str (int (arg2) + 5) + '\n'
+            print("base temp", base)
+        print("c_type", c_type, "arg1", arg1, "arg2?", arg2, "base", base, "file_name")        
         if c_type == "C_PUSH":
             if arg1 == 'constant':
                 return base + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
-            elif arg1 == 'temp':
-                return base_temp + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
-            elif arg1 == "pointer":
-                return base_p + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            elif arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
+                return base + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            # elif arg1 == "pointer":
+            #     return base_p + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            # elif arg1 == 'static':
+            #     return base + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'local':
                 code = base + '@LCL\n'
             elif arg1 == 'argument':
@@ -220,10 +232,12 @@ class WriteCode():
                 code = base + '@THAT\n'        
             code = code + 'A=M+D\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
         if c_type == "C_POP":
-            if arg1 == 'temp':
-                return '@SP\nM=M-1\nA=M\nD=M\n' + base_temp + 'M=D\n'
-            if arg1 == 'pointer': 
-                return '@SP\nM=M-1\nA=M\nD=M\n' + base_p + 'M=D\n'
+            if arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
+                return '@SP\nM=M-1\nA=M\nD=M\n' + base + 'M=D\n'
+            # if arg1 == 'pointer': 
+            #     return '@SP\nM=M-1\nA=M\nD=M\n' + base_p + 'M=D\n'
+            # elif arg1 == 'static':
+            #     return '@SP\nM=M-1\nA=M\nD=M\n' + base + 'M=D\n'  
             elif arg1 == 'local':
                 code = base + "@LCL\n"
             elif arg1 == 'argument':

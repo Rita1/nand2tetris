@@ -68,7 +68,7 @@ class TestMain(unittest.TestCase):
 
         self.answers('Pop.vm', "/tests/files/Pop.asm", "/tests/files/Pop_answ.asm")
         self.answers('Pop2.vm', "/tests/files/Pop2.asm", "/tests/files/Pop2_answ.asm")
-        self.answers('PointerTest.vm', "/tests/files/PointerTest.asm", "/tests/files/Pop2_answ.asm")
+        self.answers('StaticTest.vm', "/tests/files/StaticTest.asm", "/tests/files/Pop2_answ.asm")
 
     def test_pop_temp_this(self):
 
@@ -78,7 +78,7 @@ class TestMain(unittest.TestCase):
 
     def test_pop_static(self):
 
-        self.answers('Static', "/tests/files/Pop_temp.asm", "/tests/files/Static_answ.asm")
+        self.answers('Static', "/tests/files/Static/Static.asm", "/tests/files/Static/Static_answ.asm")
     
     def test_parse_other(self):
         # Empty
