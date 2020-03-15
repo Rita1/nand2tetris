@@ -68,7 +68,7 @@ class TestMain(unittest.TestCase):
 
         self.answers('Pop.vm', "/tests/files/Pop.asm", "/tests/files/Pop_answ.asm")
         self.answers('Pop2.vm', "/tests/files/Pop2.asm", "/tests/files/Pop2_answ.asm")
-        self.answers('StaticTest.vm', "/tests/files/StaticTest.asm", "/tests/files/Pop2_answ.asm")
+        # self.answers('StaticTest.vm', "/tests/files/StaticTest.asm", "/tests/files/Pop2_answ.asm")
 
     def test_pop_temp_this(self):
 
@@ -202,4 +202,61 @@ class TestMain(unittest.TestCase):
         is_arg1 = 'arg1' in c and 'not' == c["arg1"]
         self.assertTrue(is_type)
         self.assertTrue(is_arg1)
+
+    def test_parse_function(self):
+        
+        c = vm.Parse().parse("label IF_TRUE")
+
+        is_type = 'type' in c and 'C_LABEL' == c["type"]
+        is_arg1 = 'arg1' in c and 'IF_TRUE' == c["arg1"]
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+
+        c = vm.Parse().parse("goto IF_FALSE")
+
+        is_type = 'type' in c and 'C_GOTO' == c["type"]
+        is_arg1 = 'arg1' in c and 'IF_FALSE' == c["arg1"]
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+
+        c = vm.Parse().parse("if-goto IF_TRUE")
+
+        is_type = 'type' in c and 'C_IF' == c["type"]
+        is_arg1 = 'arg1' in c and 'IF_TRUE' == c["arg1"]
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+        
+        c = vm.Parse().parse("function Main.fibonacci 0")
+
+        is_type = 'type' in c and 'C_FUNCTION' == c["type"]
+        is_arg1 = 'arg1' in c and 'Main.fibonacci' == c["arg1"]
+        is_arg2 = 'arg2' in c and '0' == c["arg2"]
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+        self.assertTrue(is_arg2)
+
+        c = vm.Parse().parse("return")
+
+        is_type = 'type' in c and 'C_RETURN' == c["type"]
+        self.assertTrue(is_type)
+
+        c = vm.Parse().parse("call Main.fibonacci 1")
+
+        is_type = 'type' in c and 'C_CALL' == c["type"]
+        is_arg1 = 'arg1' in c and 'Main.fibonacci' == c["arg1"]
+        is_arg2 = 'arg2' in c and '1' == c["arg2"]
+        self.assertTrue(is_type)
+        self.assertTrue(is_arg1)
+        self.assertTrue(is_arg2)
+
+
+
+
+
+
+
+
+
+
+
 

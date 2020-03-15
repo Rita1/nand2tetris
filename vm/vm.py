@@ -38,9 +38,11 @@ class Main():
         # remove old file
         if os.path.exists(file_to_write):
             os.remove(file_to_write)
+            
+        w = WriteCode()    
         # reset server for unit tests
-        self.reset(file_to_write)
-        w = WriteCode()
+        self.reset(file_to_write, w)
+        
         # print("to_parse, file_to_parse, file_to_write", to_parse, files_to_parse, file_to_write)
         for f in files_to_parse:
             
@@ -87,9 +89,10 @@ class Main():
         return file_to_open, path
 
 
-    def reset(self, file_to_write):
+    def reset(self, file_to_write, write_code):
         with open(file_to_write, 'a') as fw:
-            fw.write(INIT)
+            code = write_code.write_init()
+            fw.write(code)
 
 
 class Parse():
@@ -125,15 +128,28 @@ class Parse():
         ln = ln.strip()
         if ln:
             list_commands = ln.split(" ")
+            c = len(list_commands)
+            if c > 1:
+                command["arg1"] = list_commands[1]
+            if c > 2:
+                command["arg2"] = list_commands[2]
             # print("l_c", list_commands)
             if list_commands[0] == 'push':
                 command["type"] = 'C_PUSH'
-                command["arg1"] = list_commands[1]
-                command["arg2"] = list_commands[2]
             elif list_commands[0] == 'pop':
                 command["type"] = 'C_POP'
-                command["arg1"] = list_commands[1]
-                command["arg2"] = list_commands[2]
+            elif list_commands[0] == 'label':
+                command["type"] = 'C_LABEL'
+            elif list_commands[0] == 'goto':
+                command["type"] = 'C_GOTO'
+            elif list_commands[0] == 'if-goto':
+                command["type"] = 'C_IF'
+            elif list_commands[0] == 'function':
+                command["type"] = 'C_FUNCTION'
+            elif list_commands[0] == 'return':
+                command["type"] = 'C_RETURN'
+            elif list_commands[0] == 'call':
+                command["type"] = 'C_CALL'                    
             else:
                 command["type"] = 'C_ARITHMETIC'
                 command["arg1"] = ln
@@ -142,11 +158,26 @@ class Parse():
 
 class WriteCode():
 
-
+    
     "Functions counter"
 
     funct_c = 0
     
+    """
+    Write start assembly code to file start
+    Return string with assembly
+    
+    Stack starts at @256
+    First VM function stats at Sys.init
+    
+    """
+    def write_init(self):
+        code = ""
+        code = "@256\nD=A\n@SP\nM=D\n"
+        return code
+
+
+
     """
     Parse given dict and file_name to assembly code and write to file
     
@@ -170,7 +201,7 @@ class WriteCode():
     A=A-1 // 256
     D=D+M
     M=D
-
+  
 
     """
 
@@ -195,33 +226,29 @@ class WriteCode():
         
         code = ""
         base = '@' + arg2 + '\n' + 'D=A\n'
-        print("base0", base)
+        # print("base0", base)
         if arg1 == 'pointer':
             if int(arg2) == 0:
                 base = "@THIS\n"
             elif int(arg2) == 1:
                 base = '@THAT\n'
-            print("Base pointer", base)   
+            # print("Base pointer", base)   
         elif arg1 == 'static':
             
             f_name = os.path.split(file_name.name)[1][:-3]
-            print("file_name", f_name)
+            # print("file_name", f_name)
             base = "@" + str(f_name) + "." + arg2 + "\n"
             # base = "@"
-            print("base static", base)
+            # print("base static", base)
         elif arg1 == "temp":
             base = '@R' + str (int (arg2) + 5) + '\n'
-            print("base temp", base)
-        print("c_type", c_type, "arg1", arg1, "arg2?", arg2, "base", base, "file_name")        
+            # print("base temp", base)
+        # print("c_type", c_type, "arg1", arg1, "arg2?", arg2, "base", base, "file_name")        
         if c_type == "C_PUSH":
             if arg1 == 'constant':
                 return base + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
                 return base + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
-            # elif arg1 == "pointer":
-            #     return base_p + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
-            # elif arg1 == 'static':
-            #     return base + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
             elif arg1 == 'local':
                 code = base + '@LCL\n'
             elif arg1 == 'argument':
@@ -234,10 +261,6 @@ class WriteCode():
         if c_type == "C_POP":
             if arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
                 return '@SP\nM=M-1\nA=M\nD=M\n' + base + 'M=D\n'
-            # if arg1 == 'pointer': 
-            #     return '@SP\nM=M-1\nA=M\nD=M\n' + base_p + 'M=D\n'
-            # elif arg1 == 'static':
-            #     return '@SP\nM=M-1\nA=M\nD=M\n' + base + 'M=D\n'  
             elif arg1 == 'local':
                 code = base + "@LCL\n"
             elif arg1 == 'argument':
@@ -248,8 +271,6 @@ class WriteCode():
                 code = base + '@THAT\n'       
             code = code + "D=M+D\n@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n"    
         return code
-
-        # TODO ARG - RAM2, THIS - RAM3, THAT - RAM4 
 
     def aritmetic(self, c_type, arg1, arg2):
         code = ""
