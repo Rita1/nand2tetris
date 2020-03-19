@@ -249,12 +249,35 @@ class TestMain(unittest.TestCase):
         self.assertTrue(is_arg1)
         self.assertTrue(is_arg2)
 
+    
+    def test_write_goto(self):
 
+        self.answers('Goto.vm', "/tests/files/Goto.asm", "/tests/files/Goto_answ.asm")
+        # self.answers('FibonacciSeries.vm', "/tests/files/FibonacciSeries.asm", "/tests/files/Goto_answ.asm")
 
+    def test_entry_point(self):
+        
+        l = vm.WriteCode().write_entry_point("LOOP_START")
+        self.assertEqual("(Null$LOOP_START)\n", l)
 
+        l = vm.WriteCode().write_entry_point("LOOP_START", "Add")
+        self.assertEqual("(Add$LOOP_START)\n", l)
 
+    def test_label(self):
 
+        l = vm.WriteCode().write_label("LOOP_START")
+        self.assertEqual("@Null$LOOP_START\n", l)
 
+        l = vm.WriteCode().write_label("LOOP_START", "Add")
+        self.assertEqual("@Add$LOOP_START\n", l)
+
+    def test_goto(self):
+
+        goto = vm.WriteCode().write_goto("LOOP_START")
+        self.assertEqual("@Null$LOOP_START\n0;JMP\n", goto)
+
+        goto_if = vm.WriteCode().write_if("LOOP_START")
+        self.assertEqual("@SP\nM=M-1\nA=M\nD=M\n@Null$LOOP_START\nD;JGT\n", goto_if)
 
 
 

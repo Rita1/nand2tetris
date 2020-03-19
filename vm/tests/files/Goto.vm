@@ -1,0 +1,6 @@
+push constant 0    
+push constant 1
+label LOOP_START
+push constant 0
+if-goto LOOP_START // If counter > 0, goto LOOP_START
+goto LOOP_START
