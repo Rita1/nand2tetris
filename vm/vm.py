@@ -22,10 +22,12 @@ class Main():
     def main(self, to_parse):
         
         files_to_parse = []
+        # If file
         if to_parse[-3:] == ".vm":
             file_to_open = self.get_file_path(to_parse)[0]
             files_to_parse.append(file_to_open)
             file_name_write = to_parse.split('.')[0] + ".asm"
+        # If directory
         else:
             get_path = self.get_file_path(to_parse)[1]
             to_check = os.listdir(get_path)
@@ -37,10 +39,7 @@ class Main():
             file_name_write = "/" + to_parse + ".asm"
 
         file_to_write = self.get_file_path(to_parse)[1] + file_name_write
-        # remove old file
-        if os.path.exists(file_to_write):
-            os.remove(file_to_write)
-            
+
         w = WriteCode()    
         # reset server for unit tests
         self.reset(file_to_write, w)
@@ -92,6 +91,11 @@ class Main():
 
 
     def reset(self, file_to_write, write_code):
+
+        # remove old file
+        if os.path.exists(file_to_write):
+            os.remove(file_to_write)
+
         with open(file_to_write, 'a') as fw:
             code = write_code.write_init()
             fw.write(code)
@@ -203,14 +207,15 @@ class WriteCode():
     A=A-1 // 256
     D=D+M
     M=D
-  
-
+    
+    {'type': 'C_FUNCTION', 'arg1': 2}
+    {'type': 'C_RETURN}
     """
 
     def code(self, file_name, parsed_dict, file_to_write):
         code = ''
         c_type = parsed_dict["type"]
-        arg1 = parsed_dict["arg1"]
+        arg1 = "arg1" in parsed_dict and parsed_dict["arg1"]
         arg2 = "arg2" in parsed_dict and parsed_dict["arg2"]
         if c_type == "C_PUSH" or c_type == 'C_POP':
             code = self.push_pop(c_type, arg1, arg2, file_name)
@@ -222,13 +227,17 @@ class WriteCode():
         elif c_type == "C_GOTO":
             code = self.write_goto(arg1)
         elif c_type == "C_IF":
-            code = self.write_if(arg1)        
+            code = self.write_if(arg1)
+        elif c_type == "C_FUNCTION":
+            code = self.write_function(arg1, arg2)
+        elif c_type == "C_RETURN":
+            code = self.write_return()
         with open(file_to_write, 'a') as fw:
             fw.write(code)
 
         return ""
 
-    def push_pop(self, c_type, arg1, arg2, file_name):
+    def push_pop(self, c_type, arg1, arg2, file_name=False):
         # print("Comand", c_type, arg1, arg2, "Pointer")
         
         code = ""
@@ -272,7 +281,9 @@ class WriteCode():
             elif int(arg2) == 1:
                 base = '@THAT\n'
         elif arg1 == 'static':
-            f_name = os.path.split(file_name.name)[1][:-3]
+            f_name = ""
+            if file_name:
+                f_name = os.path.split(file_name.name)[1][:-3]
             base = "@" + str(f_name) + "." + arg2 + "\n"
         elif arg1 == "temp":
             base = '@R' + str (int (arg2) + 5) + '\n'
@@ -297,7 +308,7 @@ class WriteCode():
             return self.not_to_assembly()       
 
     """
-    Produce Add and Substraction assembly string
+    Produce Add and Sub assembly string
     """
     def add_sub(self, arg1):
         code = "@SP\nM=M-1\nA=M\nD=M\nM=0\nA=A-1\n"
@@ -315,7 +326,7 @@ class WriteCode():
         return "@SP\nA=M-1\nD=M\n@SP\nD=A-D\nA=M-1\nM=D\n"
 
     """
-    Produce equal, greater than or less than operations to assebly string
+    Produce equal, greater than or less than operations to assembly string
     """
     def eq_lt_gt(self, arg1, funct_name):
         
@@ -352,10 +363,15 @@ class WriteCode():
         return "@SP\nA=M-1\nM=!M\n" 
 
     """
-    Convert entry point to assembly code
-
-    label LOOP_START - (FunctionName$Label)
-    If no function - (Null$Label)
+    Convert function entry point to assembly code
+    Usage - in Labels
+    
+    Labels example:
+    
+    if arg1 LOOP_START
+        return (FunctionName$Label)
+    If no function
+        return (Null$Label)
     """
     
     def write_entry_point(self, arg1, function_name=False):
@@ -367,8 +383,10 @@ class WriteCode():
     """
     Convert label to assembly code
 
-    label LOOP_START - @FunctionName$Label
-    If no function - @Null$Label
+    if arg1 LOOP_START
+        return @FunctionName$Label
+    If no function
+        return @Null$Label
     """
     
     def write_label(self, arg1, function_name=False):
@@ -392,6 +410,59 @@ class WriteCode():
         code = "@SP\nM=M-1\nA=M\nD=M\n" + label + "D;JGT" + "\n"
         return code    
     
+    """
+    Write function
+    
+    Takes function name and argument number, returns assembly code for function
+    Declare label for function entry
+    As many times as arg1:
+        Get zero
+        Push to stack
+        Move stack pointer
+    
+    """
+
+    def write_function(self, function_name, arg2):
+        entry_point = self.write_entry_point(function_name, function_name)
+        for i in range(int(arg2)):
+            entry_point = entry_point + self.push_pop('C_PUSH', 'constant', '0')
+        return entry_point
+
+    """
+    Writes return assembly code
+    
+    Function must push returned value to stack
+    
+    FRAME = LCL - temp. variable
+    RET = *FRAME-5 - put return address in temp. var.
+    *ARG = POP() - pop last value from stack
+    SP = ARG+1 - change SP value of caller
+    THAT = *(FRAME-1) - restore THAT value of caller
+    THIS = *(FRAME - 2) - restore THIS value of caller
+    ARG = *(FRAME - 3) - restore ARG value of caller
+    LCL = *(FRAME - 4) restore LCL value of caller
+    GOTO RET - goto return address
+    
+    """
+
+    def write_return(self):
+        # Frame
+        code = '@LCL\nD=M\n@R14\nM=D\n'
+        # Return add
+        code = code + '@5\nD=A\n@R14\nA=M-D\nD=M\n@R15\nM=D\n'
+        # *ARG = POP()
+        code = code + '@SP\nA=M-1\nD=M\n@ARG\nA=M\nM=D\n'
+        # SP = ARG+1
+        code = code + '@ARG\nD=M\n@SP\nM=D+1\n'
+        # THAT = *(FRAME-1)
+        code = code + '@R14\nA=M-1\nD=M\n@THAT\nM=D\n'
+        # THIS = *(FRAME - 2)
+        code = code + '@2\nD=A\n@R14\nA=M-D\nD=M\n@THIS\nM=D\n'
+        # ARG = *(FRAME - 3)
+        code = code + '@3\nD=A\n@R14\nA=M-D\nD=M\n@ARG\nM=D\n'
+        # LCL = *(FRAME - 4)
+        code = code + '@4\nD=A\n@R14\nA=M-D\nD=M\n@LCL\nM=D\n'
+        return code
 
 if __name__ == "__main__":
     inst = Main()

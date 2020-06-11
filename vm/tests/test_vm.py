@@ -1,8 +1,9 @@
 import unittest
 import os
 from os import path
-from .. import vm
+import sys
 
+from .. import vm
 
 class TestMain(unittest.TestCase):
 
@@ -279,7 +280,14 @@ class TestMain(unittest.TestCase):
         goto_if = vm.WriteCode().write_if("LOOP_START")
         self.assertEqual("@SP\nM=M-1\nA=M\nD=M\n@Null$LOOP_START\nD;JGT\n", goto_if)
 
+    def test_basic_loop(self):
+        self.answers('BasicLoop.vm', "/tests/files/BasicLoop.asm", "/tests/files/BasicLoop_answ.asm")
 
+    def test_function(self):
 
+        self.answers('function.vm', "/tests/files/function.asm", "/tests/files/function_answ.asm")
 
+    def test_return(self):
+
+        self.answers('return.vm', "/tests/files/return.asm", "/tests/files/return_answ.asm")
 
