@@ -291,3 +291,11 @@ class TestMain(unittest.TestCase):
 
         self.answers('return.vm', "/tests/files/return.asm", "/tests/files/return_answ.asm")
 
+    def test_simple_function(self):
+
+        self.answers('SimpleFunction.vm', "/tests/files/SimpleFunction.asm", "/tests/files/SimpleFunction_answ.asm")
+
+    def test_call(self):
+
+        # self.answers('call.vm', "/tests/files/call.asm", "/tests/files/call_answ.asm")
+        self.answers('Sys', "/tests/files/Sys/Sys.asm", "/tests/files/Sys/Sys_answ.asm")

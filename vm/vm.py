@@ -164,10 +164,17 @@ class Parse():
 
 class WriteCode():
 
-    
-    "Functions counter"
+    """
+    Functions counter - uses in Eq, Lt and return address
+    """
 
     funct_c = 0
+
+    """
+    Save with current function, using in labels formatting FunctionName$Label and return address
+    """
+
+    current_function = ''
     
     """
     Write start assembly code to file start
@@ -181,8 +188,6 @@ class WriteCode():
         code = ""
         code = "@256\nD=A\n@SP\nM=D\n"
         return code
-
-
 
     """
     Parse given dict and file_name to assembly code and write to file
@@ -217,25 +222,43 @@ class WriteCode():
         c_type = parsed_dict["type"]
         arg1 = "arg1" in parsed_dict and parsed_dict["arg1"]
         arg2 = "arg2" in parsed_dict and parsed_dict["arg2"]
+        f_name = ""
+        if file_name:
+            f_name = os.path.split(file_name.name)[1][:-3]
         if c_type == "C_PUSH" or c_type == 'C_POP':
-            code = self.push_pop(c_type, arg1, arg2, file_name)
+            code = self.push_pop(c_type, arg1, arg2, f_name)
         #    print("C_PUSH code", code)
         elif c_type  == "C_ARITHMETIC":
             code = self.aritmetic(arg1)
         elif c_type == "C_LABEL":
-            code = self.write_entry_point(arg1)
+            code = self.write_entry_point(arg1, self.current_function)
         elif c_type == "C_GOTO":
-            code = self.write_goto(arg1)
+            code = self.write_goto(arg1, self.current_function)
         elif c_type == "C_IF":
-            code = self.write_if(arg1)
+            code = self.write_if(arg1, self.current_function)
         elif c_type == "C_FUNCTION":
             code = self.write_function(arg1, arg2)
+            self.current_function = arg1
         elif c_type == "C_RETURN":
             code = self.write_return()
+        elif c_type == 'C_CALL':
+            code = self.write_call(arg1, arg2)
         with open(file_to_write, 'a') as fw:
             fw.write(code)
 
         return ""
+
+    """
+    
+    Helper function push to stack in assembly language
+    Returns string of push to stack from D location and updates SP pointer +1
+    
+    """
+
+    def push_to_stack(self):
+        code = "@SP\nA=M\nM=D\n@SP\nM=M+1\n"
+        return code
+
 
     def push_pop(self, c_type, arg1, arg2, file_name=False):
         # print("Comand", c_type, arg1, arg2, "Pointer")
@@ -244,9 +267,9 @@ class WriteCode():
         base = self.calc_base(arg1, arg2, file_name) 
         if c_type == "C_PUSH":
             if arg1 == 'constant':
-                return base + '@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+                return base + self.push_to_stack()
             elif arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
-                return base + 'D=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+                return base + 'D=M\n' + self.push_to_stack()
             elif arg1 == 'local':
                 code = base + '@LCL\n'
             elif arg1 == 'argument':
@@ -255,7 +278,7 @@ class WriteCode():
                 code = base + '@THIS\n'
             elif arg1 == 'that':
                 code = base + '@THAT\n'        
-            code = code + 'A=M+D\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+            code = code + 'A=M+D\nD=M\n' + self.push_to_stack()
         if c_type == "C_POP":
             if arg1 == 'temp' or arg1 == 'pointer' or arg1 == 'static':
                 return '@SP\nM=M-1\nA=M\nD=M\n' + base + 'M=D\n'
@@ -281,10 +304,7 @@ class WriteCode():
             elif int(arg2) == 1:
                 base = '@THAT\n'
         elif arg1 == 'static':
-            f_name = ""
-            if file_name:
-                f_name = os.path.split(file_name.name)[1][:-3]
-            base = "@" + str(f_name) + "." + arg2 + "\n"
+            base = "@" + file_name + "." + arg2 + "\n"
         elif arg1 == "temp":
             base = '@R' + str (int (arg2) + 5) + '\n'
         return base  
@@ -397,16 +417,16 @@ class WriteCode():
     """
     Convert goto command to assembly
     """
-    def write_goto(self, arg1):
-        code = self.write_label(arg1)
+    def write_goto(self, arg1, function_name=False):
+        code = self.write_label(arg1, function_name)
         code = code + "0;JMP\n"
         return code
 
     """
     Convert if-goto command to assembly
     """
-    def write_if(self, arg1):
-        label = self.write_label(arg1)
+    def write_if(self, arg1, function_name=False):
+        label = self.write_label(arg1, function_name)
         code = "@SP\nM=M-1\nA=M\nD=M\n" + label + "D;JGT" + "\n"
         return code    
     
@@ -462,7 +482,43 @@ class WriteCode():
         code = code + '@3\nD=A\n@R14\nA=M-D\nD=M\n@ARG\nM=D\n'
         # LCL = *(FRAME - 4)
         code = code + '@4\nD=A\n@R14\nA=M-D\nD=M\n@LCL\nM=D\n'
+        # GOTO RET
+        code = code + '@R15\nA=M\n'
         return code
+
+    """
+    Compile function call in assembly code
+    Takes function name and argument qty, returns assembly code
+    
+    push return address - using the label declared below
+    push LCL to stack
+    push ARG to stack
+    push THIS
+    push THAT
+    ARG = SP-n-5 - reposition ARG (n = number of args)
+    LCL = SP - reposition LCL
+    goto f - transfer to function
+    (return-address) - declare label of return address
+    
+    """
+    def write_call(self, function_name, args_qty):
+        # Push return add.
+        code = self.write_label(function_name, function_name) + 'D=A\n' + self.push_to_stack()
+        # Push LCL address to stack
+        code = code + '@LCL\nD=M\n' + self.push_to_stack()
+        # Push ARGS
+        code = code + '@ARG\nD=M\n' + self.push_to_stack()
+        # Push THIS
+        code = code + '@THIS\nD=M\n' + self.push_to_stack()
+        # Push THAT
+        code = code + '@THAT\nD=M\n' + self.push_to_stack()
+        # ARG = SP - n - 5
+        reposition_by_ram_qty = str(int(args_qty) + 5)
+        code = code + '@' + reposition_by_ram_qty + '\n' + 'D=A\n@SP\nM=M-D\n'
+        # LCL = SP
+        code = code + '@SP\nD=M\n@LCL\nM=D\n'
+        return code
+
 
 if __name__ == "__main__":
     inst = Main()

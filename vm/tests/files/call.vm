@@ -1,0 +1,5 @@
+push constant 4
+push constant 5
+function ABC 2
+return
+call ABC 2
