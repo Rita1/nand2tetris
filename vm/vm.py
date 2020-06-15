@@ -22,6 +22,7 @@ class Main():
     def main(self, to_parse):
         
         files_to_parse = []
+        is_directory = False
         # If file
         if to_parse[-3:] == ".vm":
             file_to_open = self.get_file_path(to_parse)[0]
@@ -31,18 +32,28 @@ class Main():
         else:
             get_path = self.get_file_path(to_parse)[1]
             to_check = os.listdir(get_path)
+            # First find sys file
+            for f in to_check:
+                print("File first check", f)
+                if f == "Sys.vm":
+                    new_p = to_parse + "/" + f
+                    file_to_open = self.get_file_path(new_p)[0]
+                    files_to_parse.append(file_to_open)
+                    to_check.remove(f)
+                    print("Removing from list", to_check)
             for f in to_check:
                 if f[-3:] == ".vm":
                     new_p = to_parse + "/" + f
                     file_to_open = self.get_file_path(new_p)[0]
                     files_to_parse.append(file_to_open)
             file_name_write = "/" + to_parse + ".asm"
+            is_directory = True
 
         file_to_write = self.get_file_path(to_parse)[1] + file_name_write
 
         w = WriteCode()    
         # reset server for unit tests
-        self.reset(file_to_write, w)
+        self.reset(file_to_write, w, is_directory)
         
         # print("to_parse, file_to_parse, file_to_write", to_parse, files_to_parse, file_to_write)
         for f in files_to_parse:
@@ -89,8 +100,14 @@ class Main():
             # TODO check in working directory
         return file_to_open, path
 
+    """
+    Reset script - delete file to write and write code bootstrap
+    If directory, add call for Sys.init function
+    
+    Gets file to write path and write code instance
+    """
 
-    def reset(self, file_to_write, write_code):
+    def reset(self, file_to_write, write_code, is_directory):
 
         # remove old file
         if os.path.exists(file_to_write):
@@ -98,6 +115,8 @@ class Main():
 
         with open(file_to_write, 'a') as fw:
             code = write_code.write_init()
+            if is_directory:
+                code = code + write_code.write_sys()
             fw.write(code)
 
 
@@ -185,8 +204,14 @@ class WriteCode():
 
     """
     def write_init(self):
-        code = ""
         code = "@256\nD=A\n@SP\nM=D\n"
+        return code
+
+    """
+    If directory call sys.init code
+    """
+    def write_sys(self):
+        code = self.write_call("Sys.init", 0)
         return code
 
     """
@@ -427,7 +452,7 @@ class WriteCode():
     """
     def write_if(self, arg1, function_name=False):
         label = self.write_label(arg1, function_name)
-        code = "@SP\nM=M-1\nA=M\nD=M\n" + label + "D;JGT" + "\n"
+        code = "@SP\nM=M-1\nA=M\nD=M\n" + label + "D;JNE" + "\n"
         return code    
     
     """
@@ -502,8 +527,11 @@ class WriteCode():
     
     """
     def write_call(self, function_name, args_qty):
+        label = self.write_label(str(self.funct_c), function_name)
+        function_label = self.write_label(function_name, function_name)
+        return_point = self.write_entry_point(str(self.funct_c), function_name)
         # Push return add.
-        code = self.write_label(function_name, function_name) + 'D=A\n' + self.push_to_stack()
+        code = label + 'D=A\n' + self.push_to_stack()
         # Push LCL address to stack
         code = code + '@LCL\nD=M\n' + self.push_to_stack()
         # Push ARGS
@@ -514,9 +542,15 @@ class WriteCode():
         code = code + '@THAT\nD=M\n' + self.push_to_stack()
         # ARG = SP - n - 5
         reposition_by_ram_qty = str(int(args_qty) + 5)
-        code = code + '@' + reposition_by_ram_qty + '\n' + 'D=A\n@SP\nM=M-D\n'
+        code = code + '@' + reposition_by_ram_qty + '\n' + 'D=A\n@SP\nD=M-D\n@ARG\nM=D\n'
         # LCL = SP
         code = code + '@SP\nD=M\n@LCL\nM=D\n'
+        # Goto function
+        code = code + function_label + '0;JMP\n'
+        # Return point
+        code = code + return_point
+        # Update current functions
+        self.funct_c += 1
         return code
 
 

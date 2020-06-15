@@ -278,7 +278,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual("@Null$LOOP_START\n0;JMP\n", goto)
 
         goto_if = vm.WriteCode().write_if("LOOP_START")
-        self.assertEqual("@SP\nM=M-1\nA=M\nD=M\n@Null$LOOP_START\nD;JGT\n", goto_if)
+        self.assertEqual("@SP\nM=M-1\nA=M\nD=M\n@Null$LOOP_START\nD;JNE\n", goto_if)
 
     def test_basic_loop(self):
         self.answers('BasicLoop.vm', "/tests/files/BasicLoop.asm", "/tests/files/BasicLoop_answ.asm")
@@ -299,3 +299,8 @@ class TestMain(unittest.TestCase):
 
         # self.answers('call.vm', "/tests/files/call.asm", "/tests/files/call_answ.asm")
         self.answers('Sys', "/tests/files/Sys/Sys.asm", "/tests/files/Sys/Sys_answ.asm")
+        self.answers('Sys2', "/tests/files/Sys2/Sys2.asm", "/tests/files/Sys2/Sys2_answ.asm")
+
+    def test_fibonacci(self):
+
+        self.answers('FibonacciElement', "/tests/files/FibonacciElement.asm", "/tests/files/FibonacciElement_answ.asm")

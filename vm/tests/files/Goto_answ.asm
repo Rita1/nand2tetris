@@ -29,7 +29,7 @@ M=M-1
 A=M
 D=M
 @Null$LOOP_START
-D;JGT
+D;JNE
 @Null$LOOP_START // Goto
 0;JMP
 

@@ -2,7 +2,7 @@
 D=A
 @SP
 M=D
-@Sys.init$Sys.init
+@Sys.init$0
 D=A
 @SP
 A=M
@@ -40,11 +40,16 @@ M=M+1
 @5
 D=A
 @SP
-M=M-D
+D=M-D
+@ARG
+M=D
 @SP
 D=M
 @LCL
 M=D
+@Sys.init$Sys.init
+0;JMP
+(Sys.init$0)
 (Sys.init$Sys.init)
 (Sys.init$WHILE)
 @Sys.init$WHILE

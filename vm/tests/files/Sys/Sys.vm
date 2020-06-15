@@ -1,4 +1,3 @@
-call Sys.init 0
 function Sys.init 0
 label WHILE
 goto WHILE

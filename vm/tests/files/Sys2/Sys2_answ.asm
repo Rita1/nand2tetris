@@ -53,4 +53,3 @@ M=D
 (Sys.init$Sys.init)
 (Sys.init$WHILE)
 @Sys.init$WHILE
-0;JMP
