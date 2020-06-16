@@ -297,10 +297,8 @@ class TestMain(unittest.TestCase):
 
     def test_call(self):
 
-        # self.answers('call.vm', "/tests/files/call.asm", "/tests/files/call_answ.asm")
         self.answers('Sys', "/tests/files/Sys/Sys.asm", "/tests/files/Sys/Sys_answ.asm")
-        self.answers('Sys2', "/tests/files/Sys2/Sys2.asm", "/tests/files/Sys2/Sys2_answ.asm")
 
     def test_fibonacci(self):
 
-        self.answers('FibonacciElement', "/tests/files/FibonacciElement.asm", "/tests/files/FibonacciElement_answ.asm")
+        self.answers('FibonacciElement', "/tests/files/FibonacciElement/FibonacciElement.asm", "/tests/files/FibonacciElement/FibonacciElement_answ.asm")

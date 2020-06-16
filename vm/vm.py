@@ -508,7 +508,7 @@ class WriteCode():
         # LCL = *(FRAME - 4)
         code = code + '@4\nD=A\n@R14\nA=M-D\nD=M\n@LCL\nM=D\n'
         # GOTO RET
-        code = code + '@R15\nA=M\n'
+        code = code + '@R15\nA=M\n0;JMP\n'
         return code
 
     """
