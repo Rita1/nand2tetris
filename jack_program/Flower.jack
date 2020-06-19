@@ -1,0 +1,52 @@
+/** ./JackCompiler.sh ~/ritos/nand2tetirs/nand2tetris/jack_program/ **/
+/** Flowers program. **/
+
+class Flower {
+
+   /* Flower , x and y coordinate */
+   field int x;
+   field int y;
+   /* Function - generate random x and y coordinates */
+   /* Function - paint flower */
+
+   constructor Flower new() {
+      return this;   // a constructor is expected to return a reference to the new object
+   }
+   
+   /* Generate random x coordinate */
+   
+   method void get_x() {
+       let x = 1;
+       return;
+   }
+
+   /* Generate random y coordinate */
+   
+   method void get_y() {
+       let y = 1;
+       return;
+   }
+
+   method void paint(int location) {
+    var int memAddress;
+	let memAddress = 16384+location;
+	do Memory.poke(memAddress+0, 1984);
+	do Memory.poke(memAddress+32, 4064);
+	do Memory.poke(memAddress+64, 4064);
+	do Memory.poke(memAddress+96, 4064);
+	do Memory.poke(memAddress+128, 30684);
+	do Memory.poke(memAddress+160, -1090);
+	do Memory.poke(memAddress+192, -2);
+	do Memory.poke(memAddress+224, -2);
+	do Memory.poke(memAddress+256, -2);
+	do Memory.poke(memAddress+288, -1090);
+	do Memory.poke(memAddress+320, 30684);
+	do Memory.poke(memAddress+352, 4064);
+	do Memory.poke(memAddress+384, 4064);
+	do Memory.poke(memAddress+416, 4064);
+	do Memory.poke(memAddress+448, 1984);
+	do Memory.poke(memAddress+480, 0);
+	return;
+}
+
+}
