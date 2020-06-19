@@ -1,14 +1,26 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/09/HelloWorld/Main.jack
+/** ./JackCompiler.sh ~/ritos/nand2tetirs/nand2tetris/jack_program/ **/
+/** Flowers program. **/
 
-/** Hello World program. */
 class Main {
-   function void main() {
-      /* Prints some text using the standard library. */
-      do Output.printString("Hello world!");
-      do Output.println();      // New line
-      return;
+
+   
+
+    function void main() {
+      /* Paint some flowers on screen by given number. */
+      /* 1 Get flowers numbers from screen */
+
+        var int length;
+        var Flower fl;
+        let length = Keyboard.readInt("Qty? ");
+        do Output.printString("Got ");
+        do Output.printInt(length);
+        do Output.println();
+        do Screen.clearScreen();
+
+        let fl = Flower.new();
+        do fl.paint(100);
+        return;
    }
+   
+   
 }
