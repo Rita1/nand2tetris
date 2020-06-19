@@ -1,0 +1,20 @@
+/** ./JackCompiler.sh ~/ritos/nand2tetirs/nand2tetris/jack_program/ **/
+/** Flowers program. **/
+
+class FlowerList {
+
+   /* ListOfFlowers*/
+   field int flower_numbers;
+   /* Method - draw given number flowers by x and y coordination*/
+
+   constructor FlowerList new(int leng) {
+      let flower_numbers = leng;
+      return this;   // a constructor is expected to return a reference to the new object
+   }
+   
+   /* Draw flowers */
+   
+   method void draw_flowers() {
+       return;
+   }
+}
