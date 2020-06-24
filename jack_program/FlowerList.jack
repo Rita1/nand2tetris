@@ -1,20 +1,48 @@
-/** ./JackCompiler.sh ~/ritos/nand2tetirs/nand2tetris/jack_program/ **/
+/** ./JackCompiler.sh ~/ritos/nand2tetirs/nand2tetris/ja_program/ **/
 /** Flowers program. **/
 
 class FlowerList {
 
    /* ListOfFlowers*/
    field int flower_numbers;
+   field Array fl_list;
+
    /* Method - draw given number flowers by x and y coordination*/
 
    constructor FlowerList new(int leng) {
       let flower_numbers = leng;
+      let fl_list = Array.new(leng);
+      do generate_fl_list();
       return this;   // a constructor is expected to return a reference to the new object
    }
-   
+
+   /* Generate flowers array */
+
+   method void generate_fl_list() {
+       var int numb;
+       let numb = flower_numbers;
+       while (~(numb = 0)) {
+//           var Flower f;
+           let fl_list[numb] = Flower.new();
+           let numb = numb - 1;
+           // do Output.printInt(numb);        
+       }
+       return;
+   }
+
    /* Draw flowers */
    
-   method void draw_flowers() {
+   method void paint_flowers() {
+       var int numb;
+       var int loc;
+       var Flower flower;
+       let numb = flower_numbers;
+       while (~(numb = 0)) {
+           let flower = fl_list[numb];
+           let loc = Random.randRange();
+           do flower.paint(loc);
+           let numb = numb - 1;             
+       }
        return;
    }
 }

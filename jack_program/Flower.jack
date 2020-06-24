@@ -3,30 +3,19 @@
 
 class Flower {
 
-   /* Flower , x and y coordinate */
    field int x;
-   field int y;
-   /* Function - generate random x and y coordinates */
+
    /* Function - paint flower */
 
    constructor Flower new() {
       return this;   // a constructor is expected to return a reference to the new object
    }
    
-   /* Generate random x coordinate */
-   
-   method void get_x() {
+   method void got_x() {
        let x = 1;
        return;
    }
-
-   /* Generate random y coordinate */
    
-   method void get_y() {
-       let y = 1;
-       return;
-   }
-
    method void paint(int location) {
     var int memAddress;
 	let memAddress = 16384+location;
