@@ -7,27 +7,57 @@ from .. import main
 
 class TestMain(unittest.TestCase):
 
+
+# veikia tik UTF-8 XML'ams
+
+    def xml_tag(self, file_name):
+
+        between = False # arba reiksme tarp tag'u
+        found = False   # arba tag'as
+        with open(file_name, 'r') as f:
+            while True: # kol nesibaige failas
+                tag = ""
+                c = f.read(1)
+                if not c:
+                    break
+                tag = tag + c
+                if c == "<":
+                    found = True
+                    between = False
+                while between: #kai baigsis reiksme tarp tag'u
+                    where_i_am = f.tell() # issisaugom, reikes pagrizti atgal, kad < nuskaitytume dar karta
+                    c = f.read(1)
+                    if c == "<":
+                        f.seek(where_i_am) # griztam per simboli
+                        between = False
+                        break
+                    if not c:
+                        break
+                    tag = tag + c
+                while found: # kol rasim pabaiga
+                    c = f.read(1)
+                    tag = tag + c
+                    if c == ">":
+                        found = False
+                        between = True
+                        break
+                yield tag
+
+
     def answers(self, file_to_parse, parsed_file, answer):
         main.Main().main(file_to_parse)
         file_result = os.getcwd() + parsed_file
         file_answer = os.getcwd() + answer
-        f_result = open(file_result, 'r')
-        f_answer = open(file_answer, 'r')
 
-        for line in f_result:
-            ln = f_answer.readline()
-            ln = ln.split("//")[0]
-            ln = ln.strip() + '\n'
-            self.assertEqual(line, ln)
-
-        for line in f_answer:
-            ln = f_result.readline()
-            ln = ln.split("//")[0]
-            ln = ln.strip() + '\n'
-            self.assertEqual(line, ln)
-
-        f_result.close()
-        f_answer.close()
+        gen_answ = self.xml_tag(file_answer)
+        for tag in self.xml_tag(file_result):
+             tag_answ = gen_answ.__next__()
+             self.assertEqual(tag, tag_answ)
+        #
+        gen_res = self.xml_tag(file_result)
+        for tag in self.xml_tag(file_answer):
+            tag_res = gen_res.__next__()
+            self.assertEqual(tag, tag_res)
 
 
     def test_main_create_file(self):

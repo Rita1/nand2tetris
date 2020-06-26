@@ -3,9 +3,9 @@ import sys
 import os
 #
 # from typing_extensions import Literal
-from typing import Literal
+# from typing import Literal
 
-from pydantic import BaseModel
+# from pydantic import BaseModel
 
 PATH = "/tests/files/"
 
@@ -53,11 +53,9 @@ class Main():
                             ln = Tokenizer.remove_comments(line)
                             ln = t.get_token(ln)
                             fw.write(ln)
-
+                        # END
                         def end():
                             return "</Tokens>"
-                        # END
-                        print("END", fw)
                         fw.write(end())
 
 
@@ -143,9 +141,9 @@ class Tokenizer:
 
     """Reads Jack program input and output XML tokenizer"""
 
-    class Token(BaseModel):
-        tokenType: Literal['KEYWORD', 'SYMBOL', 'IDENTIFIER', 'INT_CONST', 'STRING_CONST']
-        keyWord: Literal['CLASS', 'METHOD', 'FUNCTION', 'CONSTRUCTOR']
+    # class Token(BaseModel):
+    #     tokenType: Literal['keyword', 'symbol', 'identifier', 'int_const', 'string_const']
+    #     keyWord: Literal['class', 'method', 'function', 'constructor']
 
     #  https://pydantic-docs.helpmanual.io/usage/types/#literal-type
 
