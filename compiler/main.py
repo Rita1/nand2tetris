@@ -1,6 +1,11 @@
 
 import sys
 import os
+#
+# from typing_extensions import Literal
+from typing import Literal
+
+from pydantic import BaseModel
 
 PATH = "/tests/files/"
 
@@ -8,7 +13,7 @@ class Main():
 
     """ 
     Path to Virtual machine .jack file to parse or directory
-    Return .html file
+    Return .xml file
     """
 
     def main(self, to_parse):
@@ -35,18 +40,25 @@ class Main():
         for f in files_to_parse:
 
             # reset server for unit tests
+            print("RESET", f)
             self.reset(f[1], f[2])
             #
             try:
+                t = Tokenizer()
                 # Read
                 with open(f[0]) as f1:
-                    for line in f1:
-                        ln = Tokens.remove_comments(line)
-                        with open(f[2], 'a') as fw:
+                    with open(f[2], 'a') as fw:
+                    # Write Tokens file
+                        for line in f1:
+                            ln = Tokenizer.remove_comments(line)
+                            ln = t.get_token(ln)
                             fw.write(ln)
-                    print("file_to_open", f)
-                    # Write Tokens
 
+                        def end():
+                            return "</Tokens>"
+                        # END
+                        print("END", fw)
+                        fw.write(end())
 
 
                 # Write compiled code
@@ -69,7 +81,7 @@ class Main():
         path = ''
         file_to_open = ''
         # If file:
-        if file_to_parse[-4:] == "jack" or file_to_parse[-4:] == "html":
+        if file_to_parse[-4:] == "jack" or file_to_parse[-3:] == "xml":
             # 1. Path in testing dir
             path = os.getcwd() + PATH
             file_to_open = os.getcwd() + PATH + file_to_parse
@@ -87,7 +99,7 @@ class Main():
 
 
     """
-    Generate 3 files paths for future: file_name.jack file, file_nameT.html file for tokens and file_name.html for compiled code
+    Generate 3 files paths for future: file_name.jack file, file_nameT.xml file for tokens and file_name.xml for compiled code
     
     Gets file to parse, returns list of 3 files
     """
@@ -95,9 +107,9 @@ class Main():
     def get_files(self, to_parse):
         file_list = []
         file_to_open = self.get_file_path(to_parse)[0]
-        to_tokens = to_parse[:-5] + "T.html"
+        to_tokens = to_parse[:-5] + "T.xml"
         file_tokens = self.get_file_path(to_tokens)[0]
-        to_write = to_parse[:-4] + "html"
+        to_write = to_parse[:-4] + "xml"
         file_to_write = self.get_file_path(to_write)[0]
         file_list.append(file_to_open)
         file_list.append(file_to_write)
@@ -118,19 +130,43 @@ class Main():
         if os.path.exists(file_to_write_tokens):
             os.remove(file_to_write_tokens)
 
-        with open(file_to_write_tokens, 'a') as fw:
-            code = "<Tokens></Tokens>"
+        # Open File to write open tag
+        with open(file_to_write_tokens, 'a+') as fw:
+            code = "<Tokens>"
             fw.write(code)
 
 
-class Tokens:
 
-    """Reads Jack program input and output HTML tokenizer"""
 
+
+class Tokenizer:
+
+    """Reads Jack program input and output XML tokenizer"""
+
+    class Token(BaseModel):
+        tokenType: Literal['KEYWORD', 'SYMBOL', 'IDENTIFIER', 'INT_CONST', 'STRING_CONST']
+        keyWord: Literal['CLASS', 'METHOD', 'FUNCTION', 'CONSTRUCTOR']
+
+    #  https://pydantic-docs.helpmanual.io/usage/types/#literal-type
+
+    """
+    Create Tokens XML
+    Takes string, returns string XML tag
+    """
+
+    def get_token(self, line):
+        # with open(file_to_write_tokens, 'a') as fw:
+        #     code = "<Tokens></Tokens>"
+        #     fw.write(code)
+
+        check_line = line.split(" ")
+        for s in check_line:
+            print(s)
+        return line
     """
     Removes comments and spaces: // 
                     /* ... */
-                    /** ... **/
+                    /** ... */
     Gets string, returns string
     
     TODO
@@ -139,11 +175,15 @@ class Tokens:
     @staticmethod
     def remove_comments(line):
 
+        line = line.split("//")[0]
+        line = line.split("/*")[0]
+        line = line.split("/**")[0]
+        line = line.strip()
         return line
 
 
     """
-    Change symbols to HTML allowed symbols
+    Change symbols to XML allowed symbols
     From < - &lt
          > - &gt
          & - &amp

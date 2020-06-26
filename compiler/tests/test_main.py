@@ -34,23 +34,48 @@ class TestMain(unittest.TestCase):
         
         inst = main.Main()
         inst.main('Test.jack')
-        f = os.getcwd() + "/tests/files/Test.html"
-        f1 = os.getcwd() + "/tests/files/TestT.html"
+        f = os.getcwd() + "/tests/files/Test.xml"
+        f1 = os.getcwd() + "/tests/files/TestT.xml"
         self.assertTrue(path.exists(f))
         self.assertTrue(path.exists(f1))
 
         inst.main('ManyFiles')
-        f1 = os.getcwd() + "/tests/files/ManyFiles/T1.html"
-        f2 = os.getcwd() + "/tests/files/ManyFiles/T2.html"
-        f3 = os.getcwd() + "/tests/files/ManyFiles/T1T.html"
-        f4 = os.getcwd() + "/tests/files/ManyFiles/T2T.html"
+        f1 = os.getcwd() + "/tests/files/ManyFiles/T1.xml"
+        f2 = os.getcwd() + "/tests/files/ManyFiles/T2.xml"
+        f3 = os.getcwd() + "/tests/files/ManyFiles/T1T.xml"
+        f4 = os.getcwd() + "/tests/files/ManyFiles/T2T.xml"
         self.assertTrue(path.exists(f1))
         self.assertTrue(path.exists(f2))
         self.assertTrue(path.exists(f3))
         self.assertTrue(path.exists(f4))
 
-    # def test_main_basic(self):
-    #
-    #     self.answers('Test.vm', "/tests/files/Test.asm", "/tests/files/Test_answ.asm")
-    #     self.answers('Push.vm', "/tests/files/Push.asm", "/tests/files/Push_answ.asm")
+    def test_tokens_comments(self):
+
+        Tokens = main.Tokenizer
+        self.assertEqual("test", Tokens.remove_comments("test   "))
+        self.assertEqual("test", Tokens.remove_comments("  test   "))
+        self.assertEqual("test", Tokens.remove_comments("     test"))
+
+        self.assertEqual("test and test", Tokens.remove_comments("test and test //Comment "))
+        self.assertEqual("class Test", Tokens.remove_comments("class Test /* Comment */ "))
+        self.assertEqual("", Tokens.remove_comments("/** Disposes this fraction. */ "))
+
+        self.assertEqual("", Tokens.remove_comments("""// File name: projects/09/Average/Main.jack"""))
+        self.assertEqual("class Main {", Tokens.remove_comments(""" class Main {"""))
+
+        self.assertEqual("do Output.printInt(sum / length);", Tokens.remove_comments("do Output.printInt(sum / length);"))
+        # self.assertEqual("do Output.printInt(sum / length);", Tokens.remove_comments("do Output.printInt(sum / length);"))
+        self.assertEqual("""do Output.printString("The average is ");""",
+                         Tokens.remove_comments("""do Output.printString("The average is ");"""))
+
+        self.assertEqual("let a = Array.new(length);", Tokens.remove_comments("let a = Array.new(length); // constructs the array"))
+        self.assertEqual("let r = a - (b * (a / b));", Tokens.remove_comments("let r = a - (b * (a / b));  // r = remainder of the integer division a/b"))
+
+
+    def test_tokens(self):
+
+        self.answers('Test.jack', "/tests/files/TestT.xml", "/tests/files/TestT_answ.xml")
+
+
+
 
