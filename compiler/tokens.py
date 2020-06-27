@@ -8,7 +8,9 @@ from pydantic import BaseModel, ValidationError, validator
 import xml.etree.ElementTree as ET
 
 class Tokenizer:
+
     token_before = ''
+    token_before_before = ''
 
     class Token(BaseModel):
         keyWord: Optional[
@@ -86,7 +88,9 @@ class Tokenizer:
             elif s in Tokenizer.Token.get_symbol():
                 t = Tokenizer.Token(tokenType='symbol', symbol=s)
             print("Brand new Token", t)
-            Tokenizer.token_before = t
+            if self.token_before:
+                self.token_before_before = self.token_before
+            self.token_before = t
             xml = Tokenizer.get_xml(t)
             write_file.write(xml)
         return line
@@ -124,7 +128,11 @@ class Tokenizer:
 
     def check_if_needs_identifier(self):
         # print("My token before", self.token_before)
+        if self.token_before_before:
+            bb = self.token_before_before.keyWord
+            if bb == 'function' or bb == 'var':
+                return True
         if self.token_before:
-            if self.token_before.keyWord == 'class':
+            if self.token_before.keyWord in ['class', 'var', 'let']:
                 return True
         return False

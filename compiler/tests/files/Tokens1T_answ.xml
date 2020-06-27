@@ -1,6 +1,11 @@
 <tokens>
 <keyword>class</keyword>
 <identifier>Main</identifier>
-<symbol>{</symbol>
+<symbol> { </symbol>
+<keyword> function </keyword>
+<keyword> void </keyword>
+<identifier>main</identifier>
+<symbol> { </symbol>
+<symbol>}</symbol>
 <symbol>}</symbol>
 </tokens>

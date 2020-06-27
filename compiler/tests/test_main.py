@@ -116,6 +116,8 @@ class TestMain(unittest.TestCase):
         self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
         self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
 
+    def test_tokens_main(self):
 
+        self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
 
 
