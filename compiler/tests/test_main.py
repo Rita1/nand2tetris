@@ -4,6 +4,7 @@ from os import path
 import sys
 
 from .. import main
+from .. import tokens
 
 class TestMain(unittest.TestCase):
 
@@ -51,13 +52,20 @@ class TestMain(unittest.TestCase):
 
         gen_answ = self.xml_tag(file_answer)
         for tag in self.xml_tag(file_result):
-             tag_answ = gen_answ.__next__()
-             self.assertEqual(tag, tag_answ)
+             if tag.strip():
+                 tag_answ = ""
+                 while not tag_answ.strip(): # Enteriai
+                     tag_answ = gen_answ.__next__().strip()
+                 self.assertEqual(tag, tag_answ)
         #
         gen_res = self.xml_tag(file_result)
         for tag in self.xml_tag(file_answer):
-            tag_res = gen_res.__next__()
-            self.assertEqual(tag, tag_res)
+            # print("TAG", type(tag), len(tag))
+            tag = tag.strip()
+            if tag:
+                tag_res = gen_res.__next__()
+                # print("tag, tag_answ", tag, tag_res)
+                self.assertEqual(tag, tag_res)
 
 
     def test_main_create_file(self):
@@ -81,7 +89,7 @@ class TestMain(unittest.TestCase):
 
     def test_tokens_comments(self):
 
-        Tokens = main.Tokenizer
+        Tokens = tokens.Tokenizer
         self.assertEqual("test", Tokens.remove_comments("test   "))
         self.assertEqual("test", Tokens.remove_comments("  test   "))
         self.assertEqual("test", Tokens.remove_comments("     test"))
@@ -105,6 +113,8 @@ class TestMain(unittest.TestCase):
     def test_tokens(self):
 
         self.answers('Test.jack', "/tests/files/TestT.xml", "/tests/files/TestT_answ.xml")
+        self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
+        self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
 
 
 

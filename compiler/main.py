@@ -1,11 +1,14 @@
 
 import sys
 import os
-#
-# from typing_extensions import Literal
-# from typing import Literal
 
-# from pydantic import BaseModel
+# from typing_extensions import Literal
+from typing import Literal, Optional
+from pydantic import BaseModel, ValidationError, validator
+
+# https://docs.python.org/3/library/xml.etree.elementtree.html
+import xml.etree.ElementTree as ET
+import tokens as T
 
 PATH = "/tests/files/"
 
@@ -40,22 +43,21 @@ class Main():
         for f in files_to_parse:
 
             # reset server for unit tests
-            print("RESET", f)
             self.reset(f[1], f[2])
             #
             try:
-                t = Tokenizer()
+                t = T.Tokenizer()
                 # Read
                 with open(f[0]) as f1:
                     with open(f[2], 'a') as fw:
                     # Write Tokens file
                         for line in f1:
-                            ln = Tokenizer.remove_comments(line)
-                            ln = t.get_token(ln)
-                            fw.write(ln)
+                            ln = T.Tokenizer.remove_comments(line)
+                            t.get_token(ln, fw)
+                            # fw.write(ln)
                         # END
                         def end():
-                            return "</Tokens>"
+                            return "</tokens>"
                         fw.write(end())
 
 
@@ -130,65 +132,5 @@ class Main():
 
         # Open File to write open tag
         with open(file_to_write_tokens, 'a+') as fw:
-            code = "<Tokens>"
+            code = "<tokens>"
             fw.write(code)
-
-
-
-
-
-class Tokenizer:
-
-    """Reads Jack program input and output XML tokenizer"""
-
-    # class Token(BaseModel):
-    #     tokenType: Literal['keyword', 'symbol', 'identifier', 'int_const', 'string_const']
-    #     keyWord: Literal['class', 'method', 'function', 'constructor']
-
-    #  https://pydantic-docs.helpmanual.io/usage/types/#literal-type
-
-    """
-    Create Tokens XML
-    Takes string, returns string XML tag
-    """
-
-    def get_token(self, line):
-        # with open(file_to_write_tokens, 'a') as fw:
-        #     code = "<Tokens></Tokens>"
-        #     fw.write(code)
-
-        check_line = line.split(" ")
-        for s in check_line:
-            print(s)
-        return line
-    """
-    Removes comments and spaces: // 
-                    /* ... */
-                    /** ... */
-    Gets string, returns string
-    
-    TODO
-    """
-
-    @staticmethod
-    def remove_comments(line):
-
-        line = line.split("//")[0]
-        line = line.split("/*")[0]
-        line = line.split("/**")[0]
-        line = line.strip()
-        return line
-
-
-    """
-    Change symbols to XML allowed symbols
-    From < - &lt
-         > - &gt
-         & - &amp
-    
-    TODO
-    """
-
-    def change_symbols(self, s):
-
-        return s
