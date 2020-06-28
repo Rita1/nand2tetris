@@ -12,6 +12,9 @@ class Tokenizer:
     token_before = ''
     token_before_before = ''
 
+    "Saves files to write pointer"
+    file_to_write = ''
+
     class Token(BaseModel):
         keyWord: Optional[
             Literal['class', 'method', 'function', 'constructor', 'integer', 'boolean', 'char', 'void', 'var',
@@ -51,49 +54,91 @@ class Tokenizer:
                 yield i['const']
 
     """ Generate XML string
-        Gets Token obj. returns string """
+        Gets Token obj. list returns XML string """
 
-    @staticmethod
-    def get_xml(token):
-        if type(token) != Tokenizer.Token:
-            raise TypeError("Token expected")
-        tag = token.tokenType
-        xml = ET.Element(tag)
-        if 'keyword' == tag:
-            print("FIND ONE KEYWORD")
-            xml.text = token.keyWord
-        if 'symbol' == tag:
-            print("FIND ONE SYMBOL")
-            xml.text = token.symbol
-        if 'identifier' == tag:
-            print("FIND ONE IDEN")
-            xml.text = token.identifier
-        return ET.tostring(xml, encoding='unicode')
+
 
     """
     Create Tokens XML
     Takes string, pointer to write file, writes XML tag
     """
 
-    def get_token(self, line, write_file):
+    def make_tokens(self, line):
 
-        check_line = line.split(" ")
-        print("Check_line", check_line)
-        for s in check_line:
-            t = ''
-            if self.check_if_needs_identifier():
-                t = Tokenizer.Token(tokenType='identifier', identifier=s)
-            elif s in Tokenizer.Token.get_keyword():
-                t = Tokenizer.Token(tokenType='keyword', keyWord=s)
-            elif s in Tokenizer.Token.get_symbol():
-                t = Tokenizer.Token(tokenType='symbol', symbol=s)
-            print("Brand new Token", t)
-            if self.token_before:
-                self.token_before_before = self.token_before
-            self.token_before = t
-            xml = Tokenizer.get_xml(t)
-            write_file.write(xml)
-        return line
+        print("Check_line", line)
+        todo = self.make_todo_list(line)
+
+        tokens_list = self.get_tokens_list(todo, [])
+        print("Tokens list", tokens_list)
+        self.dump_to_xml(tokens_list)
+        return tokens_list
+
+    """ Generate todo list from string 
+        Gets string renturns list of string"""
+
+    def make_todo_list(self, line):
+        print("Line", line)
+        todo = line.split(" ")
+        if "" in todo:
+            todo.remove("")
+        to_check = todo.copy()
+        for i in range(len(to_check)):
+            s = to_check[i]
+            last_symbol = to_check[i][-1]
+            if s and last_symbol in Tokenizer.Token.get_symbol():
+                index = todo.index(s)
+                todo.pop(index)
+                todo.insert(index, s[:-1])
+                todo.insert(index+1, last_symbol)
+        if "" in todo:
+            todo.remove("")
+        print("MY TODO from make_todo_list", todo)
+        return todo
+
+    """ Get tokens list from string list
+        Gets todo list, returns Tokens list """
+
+    def get_tokens_list(self, todo, answ):
+
+        if not todo:
+            return answ
+        print("GOT TODO", todo, todo[0])
+        if todo[0] in Tokenizer.Token.get_symbol():
+            t = Tokenizer.Token(tokenType='symbol', symbol=todo[0])
+            answ.append(t)
+        elif todo[0] == "int":
+            t = Tokenizer.Token(tokenType='keyword', keyWord='integer')
+            answ.append(t)
+        elif self.check_identifier(todo, answ, todo[0]):
+            t = Tokenizer.Token(tokenType='identifier', identifier=todo[0])
+            answ.append(t)
+        elif todo[0] in Tokenizer.Token.get_keyword():
+            t = Tokenizer.Token(tokenType='keyword', keyWord=todo[0])
+            answ.append(t)
+
+        return self.get_tokens_list(todo[1:], answ)
+
+    """ Creates string XML from Tokens list """
+
+    def dump_to_xml(self, tokens_list):
+        for token in tokens_list:
+            if type(token) != Tokenizer.Token:
+                raise TypeError("Token expected")
+            tag = token.tokenType
+            xml = ET.Element(tag)
+            if 'keyword' == tag:
+                print("FIND ONE KEYWORD")
+                xml.text = token.keyWord
+            if 'symbol' == tag:
+                print("FIND ONE SYMBOL")
+                xml.text = token.symbol
+            if 'identifier' == tag:
+                print("FIND ONE IDEN")
+                xml.text = token.identifier
+            xml_str = ET.tostring(xml, encoding='unicode')
+            if self.file_to_write: #hack for unit testing
+                self.file_to_write.write(xml_str)
+        return
 
     """
     Removes comments and spaces: // 
@@ -126,13 +171,18 @@ class Tokenizer:
 
         return s
 
-    def check_if_needs_identifier(self):
+    """ Returns True, if string is identifier 
+        Gets strings todo list, answ Tokens list, current string """
+
+    def check_identifier(self, todo, answ, current_s):
         # print("My token before", self.token_before)
-        if self.token_before_before:
-            bb = self.token_before_before.keyWord
-            if bb == 'function' or bb == 'var':
-                return True
-        if self.token_before:
-            if self.token_before.keyWord in ['class', 'var', 'let']:
-                return True
+        print("todo, answ, current_s", todo, answ, current_s)
+        # After class always id
+        if answ and answ[-1] and answ[-1].keyWord == 'class':
+            print("RETURN WITH TRUE")
+            return True
+        # Jeigu eilute prasideda var, tai visi tagai nuo trecio yra identifier - jeigu ne symbol
+        if answ and answ[0].keyWord == 'var' and len(answ) > 1:
+            print("RETURN WITH TRUE from VAR")
+            return True
         return False

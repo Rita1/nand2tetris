@@ -51,11 +51,11 @@ class Main():
                 with open(f[0]) as f1:
                     with open(f[2], 'a') as fw:
                     # Write Tokens file
+                        T.Tokenizer.file_to_write = fw
                         for line in f1:
                             ln = T.Tokenizer.remove_comments(line)
                             if ln:
-                                t.get_token(ln, fw)
-                            # fw.write(ln)
+                                t.make_tokens(ln)
                         # END
                         def end():
                             return "</tokens>"

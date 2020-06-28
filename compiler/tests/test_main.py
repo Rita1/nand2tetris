@@ -120,4 +120,70 @@ class TestMain(unittest.TestCase):
 
         self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
 
+    def test_tokens_todo(self):
 
+        Tokens = tokens.Tokenizer
+        line = ""
+        todo = Tokens().make_todo_list(line)
+        self.assertFalse(todo)
+
+        line = "var int i, a;"
+        todo = Tokens().make_todo_list(line)
+        answ = ['var', 'int', 'i', ',', 'a', ';']
+        self.assertEqual(todo, answ)
+
+        line = "class"
+        todo = Tokens().make_todo_list(line)
+        answ = ['class']
+        self.assertEqual(todo, answ)
+
+    def test_tokens_list_simple(self):
+
+        Tokens = tokens.Tokenizer
+        line = ""
+        t_list = Tokens().make_tokens(line)
+        self.assertFalse(t_list)
+
+        line = "class"
+        t_list = Tokens().make_tokens(line)
+        anws = Tokens.Token(tokenType='keyword', keyWord='class')
+        self.assertEqual(len(t_list), 1)
+        self.assertEqual(t_list[0], anws)
+    #
+        line = "class {"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='class'), Tokens.Token(tokenType='symbol', symbol='{')]
+        self.assertEqual(len(t_list), 2)
+        # print("T_list", t_list, "ANSW", anws)
+        for i in range(len(t_list)):
+            # print(i)
+            self.assertEquals(t_list[i], answ[i])
+
+    def test_tokens_list_identifier(self):
+
+        Tokens = tokens.Tokenizer
+        line = "class Main {"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='class'), Tokens.Token(tokenType='identifier', identifier='Main'), Tokens.Token(tokenType='symbol', symbol='{')]
+        self.assertEqual(len(t_list), 3)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+    #
+        line = "var int a;"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='integer'), Tokens.Token(tokenType='identifier', identifier='a'),
+                Tokens.Token(tokenType='symbol', symbol=';')]
+        self.assertEqual(len(t_list), 4)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+    #
+        line = "var int a, b;"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='integer'), Tokens.Token(tokenType='identifier', identifier='a'),
+                Tokens.Token(tokenType='symbol', symbol=','),
+                Tokens.Token(tokenType='identifier', identifier='b'),
+                Tokens.Token(tokenType='symbol', symbol=';')]
+        self.assertEqual(len(t_list), 6)
+        print("T_LIST ****************************", t_list)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
