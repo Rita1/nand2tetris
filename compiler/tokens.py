@@ -22,7 +22,8 @@ class Tokenizer:
         symbol: Optional[
             Literal['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']]
         identifier: Optional[str]
-        tokenType: Literal['keyword', 'symbol', 'identifier', 'int_const', 'string_const']
+        integerConstant: Optional[int]
+        tokenType: Literal['keyword', 'symbol', 'identifier', 'integerConstant', 'string_const']
 
         @validator('tokenType')
         def validate_keyword(cls, v, values):
@@ -35,6 +36,9 @@ class Tokenizer:
             if 'identifier' in v:
                 if not type(values['identifier']) == str:
                     raise ValueError('String type for identifier required')
+            if 'integerConstant' in v:
+                if not type(values['integerConstant']) == int:
+                    raise ValueError('Integer type for int constant required')
             return v
 
         #  https://pydantic-docs.helpmanual.io/usage/types/#literal-type
@@ -77,23 +81,37 @@ class Tokenizer:
         Gets string renturns list of string"""
 
     def make_todo_list(self, line):
-        print("Line", line)
+        # print("Line", line)
         todo = line.split(" ")
         if "" in todo:
             todo.remove("")
-        to_check = todo.copy()
-        for i in range(len(to_check)):
-            s = to_check[i]
-            last_symbol = to_check[i][-1]
-            if s and last_symbol in Tokenizer.Token.get_symbol():
-                index = todo.index(s)
-                todo.pop(index)
-                todo.insert(index, s[:-1])
-                todo.insert(index+1, last_symbol)
+        while self.is_symbol(todo):
+            for i in range(len(todo)):
+                s = todo[i]
+                last_symbol = ''
+                if len(s) > 1:
+                    last_symbol = todo[i][-1]
+                if s and last_symbol in Tokenizer.Token.get_symbol():
+                    todo.pop(i)
+                    if s[:-1]:
+                        todo.insert(i, s[:-1])
+                    if last_symbol:
+                        todo.insert(i+1, last_symbol)
         if "" in todo:
             todo.remove("")
         print("MY TODO from make_todo_list", todo)
         return todo
+
+    """ Returns True if is symbol in line """
+    @staticmethod
+    def is_symbol(todo):
+        if todo:
+            for i in todo:
+                if len(i) > 1 and i[-1] in Tokenizer.Token.get_symbol():
+                    # print("RETURN TRUE IS SYMBOL")
+                    return True
+        return False
+
 
     """ Get tokens list from string list
         Gets todo list, returns Tokens list """
@@ -115,7 +133,9 @@ class Tokenizer:
         elif todo[0] in Tokenizer.Token.get_keyword():
             t = Tokenizer.Token(tokenType='keyword', keyWord=todo[0])
             answ.append(t)
-
+        elif todo[0].isdigit():
+            t = Tokenizer.Token(tokenType='integerConstant', integerConstant=int(todo[0]))
+            answ.append(t)
         return self.get_tokens_list(todo[1:], answ)
 
     """ Creates string XML from Tokens list """
@@ -126,15 +146,15 @@ class Tokenizer:
                 raise TypeError("Token expected")
             tag = token.tokenType
             xml = ET.Element(tag)
-            if 'keyword' == tag:
-                print("FIND ONE KEYWORD")
-                xml.text = token.keyWord
-            if 'symbol' == tag:
-                print("FIND ONE SYMBOL")
-                xml.text = token.symbol
-            if 'identifier' == tag:
-                print("FIND ONE IDEN")
-                xml.text = token.identifier
+
+            # TokenType nereikia
+            tag_dict = token.dict(exclude_none=True)
+            del tag_dict['tokenType']
+
+            #Likes vienas laukas bus tekstas
+            text = tag_dict[next(iter(tag_dict))]
+            xml.text = text
+
             xml_str = ET.tostring(xml, encoding='unicode')
             if self.file_to_write: #hack for unit testing
                 self.file_to_write.write(xml_str)
@@ -177,12 +197,21 @@ class Tokenizer:
     def check_identifier(self, todo, answ, current_s):
         # print("My token before", self.token_before)
         print("todo, answ, current_s", todo, answ, current_s)
-        # After class always id
-        if answ and answ[-1] and answ[-1].keyWord == 'class':
+        # After class and let always id
+        if answ and answ[-1] and (answ[-1].keyWord == 'class' or answ[-1].keyWord == 'let'):
             print("RETURN WITH TRUE")
             return True
-        # Jeigu eilute prasideda var, tai visi tagai nuo trecio yra identifier - jeigu ne symbol
-        if answ and answ[0].keyWord == 'var' and len(answ) > 1:
-            print("RETURN WITH TRUE from VAR")
+        # Jeigu eilute prasideda var, tai visi tagai nuo trecio yra identifier
+        #                           antras tagas arba keyword, arba identifier
+        if answ and answ[0].keyWord == 'var':
+            if len(answ) > 1:
+                print("RETURN WITH TRUE from VAR")
+                return True
+            if len(answ) == 1 and current_s not in Tokenizer.Token.get_keyword():
+                return True
+        # Jeigu eilute prasideda var, tai vis
+        # jeigu  eilute prasideda function, tai trecias bus identifier
+        if answ and answ[0].keyWord == 'function' and len(answ) == 2:
+            print("RETURN TRUE FROM FUNCTION")
             return True
         return False

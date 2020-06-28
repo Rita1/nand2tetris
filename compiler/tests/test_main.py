@@ -116,9 +116,9 @@ class TestMain(unittest.TestCase):
         self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
         self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
 
-    def test_tokens_main(self):
-
-        self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
+    # def test_tokens_main(self):
+    #
+    #     self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
 
     def test_tokens_todo(self):
 
@@ -136,6 +136,12 @@ class TestMain(unittest.TestCase):
         todo = Tokens().make_todo_list(line)
         answ = ['class']
         self.assertEqual(todo, answ)
+
+        line = "function void main() {"
+        todo = Tokens().make_todo_list(line)
+        answ = ['function', 'void', 'main', '(', ')', '{']
+        self.assertEqual(todo, answ)
+
 
     def test_tokens_list_simple(self):
 
@@ -187,3 +193,47 @@ class TestMain(unittest.TestCase):
         print("T_LIST ****************************", t_list)
         for i in range(len(t_list)):
             self.assertEquals(t_list[i], answ[i])
+
+    def test_tokens_ident_funct(self):
+
+        Tokens = tokens.Tokenizer
+        line = "function void main() {"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='function'), Tokens.Token(tokenType='keyword', keyWord='void'),
+            Tokens.Token(tokenType='identifier', identifier='main'),
+            Tokens.Token(tokenType='symbol', symbol='('), Tokens.Token(tokenType='symbol', symbol=')'),
+            Tokens.Token(tokenType='symbol', symbol='{')]
+        self.assertEqual(len(t_list), 6)
+        print("T_LIST ****************************", t_list)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+
+    def test_tokens_ident_let(self):
+
+        Tokens = tokens.Tokenizer
+        line = "let i = 0;"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='let'),
+            Tokens.Token(tokenType='identifier', identifier='i'),
+            Tokens.Token(tokenType='symbol', symbol='='),
+            Tokens.Token(tokenType='integerConstant', integerConstant=0),
+            Tokens.Token(tokenType='symbol', symbol=';')]
+        self.assertEqual(len(t_list), 5)
+        print("T_LIST ****************************", t_list)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+
+    def test_tokents_ident_var2(self):
+
+        Tokens = tokens.Tokenizer
+        line = "var Array a;"
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='var'),
+            Tokens.Token(tokenType='identifier', identifier='Array'),
+            Tokens.Token(tokenType='identifier', identifier='a'),
+            Tokens.Token(tokenType='symbol', symbol=';')]
+        self.assertEqual(len(t_list), 4)
+        print("T_LIST ****************************", t_list)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+
