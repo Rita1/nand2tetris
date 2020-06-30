@@ -9,9 +9,6 @@ import xml.etree.ElementTree as ET
 
 class Tokenizer:
 
-    token_before = ''
-    token_before_before = ''
-
     "Saves files to write pointer"
     file_to_write = ''
 
@@ -23,7 +20,8 @@ class Tokenizer:
             Literal['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']]
         identifier: Optional[str]
         integerConstant: Optional[int]
-        tokenType: Literal['keyword', 'symbol', 'identifier', 'integerConstant', 'string_const']
+        stringConstant: Optional[str]
+        tokenType: Literal['keyword', 'symbol', 'identifier', 'integerConstant', 'stringConstant']
 
         @validator('tokenType')
         def validate_keyword(cls, v, values):
@@ -39,6 +37,9 @@ class Tokenizer:
             if 'integerConstant' in v:
                 if not type(values['integerConstant']) == int:
                     raise ValueError('Integer type for int constant required')
+            if 'stringConstant' in v:
+                if not values['stringConstant'] or not type(values['stringConstant']) == str:
+                    raise ValueError('String type for int constant required')
             return v
 
         #  https://pydantic-docs.helpmanual.io/usage/types/#literal-type
@@ -50,7 +51,7 @@ class Tokenizer:
             for i in Tokenizer.Token.schema()['properties']['keyWord']['anyOf']:
                 yield i['const']
 
-        """ Get keyWord field values to run """
+        """ Get Symbol field values to run """
 
         @staticmethod
         def get_symbol():
@@ -82,35 +83,117 @@ class Tokenizer:
 
     def make_todo_list(self, line):
         # print("Line", line)
-        todo = line.split(" ")
+        todo = []
+        line = self.split_by_string(line, [])
+        print("split_by_string", line)
+        for l in line:
+            if l and l[0] != '"':
+                new_list = l.split()
+                todo.extend(new_list)
+            else:
+                todo.append(l)
+        print("after spaces", todo)
         if "" in todo:
             todo.remove("")
-        while self.is_symbol(todo):
-            for i in range(len(todo)):
-                s = todo[i]
-                last_symbol = ''
-                if len(s) > 1:
-                    last_symbol = todo[i][-1]
-                if s and last_symbol in Tokenizer.Token.get_symbol():
-                    todo.pop(i)
-                    if s[:-1]:
-                        todo.insert(i, s[:-1])
-                    if last_symbol:
-                        todo.insert(i+1, last_symbol)
+        todo = self.split_by_symbol(todo)
         if "" in todo:
             todo.remove("")
         print("MY TODO from make_todo_list", todo)
         return todo
 
+    """" Split given list by symbols
+         List of string, returns list of string"""
+
+    def split_by_symbol(self, todo):
+        print("START todo", todo)
+        while self.is_symbol(todo):
+            for i in range(len(todo)):
+                line = todo[i]
+                last_symbol = ''
+                if len(line) > 1:
+                    last_symbol = line[-1]
+                found_one = self.found_one_symbol(line)
+                if len(line) > 1 and found_one >= 0 and last_symbol != '"':
+                    todo.pop(i)
+                    if line[:found_one]:
+                        todo.insert(i, line[:found_one])
+                        todo.insert(i+1, line[found_one])
+                        if line[found_one+1:]:
+                            todo.insert(i+2, line[found_one+1:])
+        return todo
+
+    def found_one_symbol(self, line):
+        coord = -1
+        for s in Tokenizer.Token.get_symbol():
+            coord = line.find(s)
+            if coord >= 0:
+                return coord
+        return coord
+
+    """ Extracts string from given string
+        Get string, empty list, returns string list
+        Exmpl." let length = Keyboard.readInt("HOW MANY NUMBERS? ");
+                ['let length = Keyboard.readInt("','HOW MANY NUMBERS? ',');' ]"""
+
+    def split_by_string(self, line, answ):
+        if not self.is_string(line):
+            answ.append(line)
+            return answ
+        start, end = self.string_coord(line)
+        first_s = line[:start]
+        midle_s = line[start:end+1]
+        end_s = line[end+1:]
+        answ.append(first_s)
+        answ.append(midle_s)
+        # answ.append(end_s)
+        return self.split_by_string(end_s, answ)
+        #
+        # print(start, end)
+
+        # print("FIRST", first_s, "+Midle", midle_s, "+END", end_s)
+        # print("line", line, answ)
+        # return answ
+
+    """ Gets string, checks if not extracted string is in line
+        If " and " is not first and second, where is string 
+        There is NO cases as: ["Test1", " String""] and [""String ", "Test1"] 
+        Expl: ["("HOW MANY NUMBERS? ");"], True """
+
+    @staticmethod
+    def is_string(line):
+        if line and (line.find('"', 1) != -1):
+            if line.find('"', len(line)-1) >= 0:
+                return False
+            return True
+        return False
+
+    """" Gets string coordinates x and y 
+         Gets list of string, returns first string first and last symbol"""
+
+    @staticmethod
+    def string_coord(line):
+        start = -1
+        end = -1
+        if line and line.find('"') > 0:
+            start = line.find('"')
+            end = line.find('"', start+1)
+            return (start, end)
+        return (start, end)
+    
     """ Returns True if is symbol in line """
+    
     @staticmethod
     def is_symbol(todo):
+        found = False
         if todo:
             for i in todo:
-                if len(i) > 1 and i[-1] in Tokenizer.Token.get_symbol():
-                    # print("RETURN TRUE IS SYMBOL")
-                    return True
-        return False
+                if i and i[0] == '"' or len(i) == 1:
+                    found = False
+                else:
+                    for s in Tokenizer.Token.get_symbol():
+                        if i.find(s) >= 0:
+                            return True
+        return found
 
 
     """ Get tokens list from string list

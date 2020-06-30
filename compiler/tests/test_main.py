@@ -142,6 +142,116 @@ class TestMain(unittest.TestCase):
         answ = ['function', 'void', 'main', '(', ')', '{']
         self.assertEqual(todo, answ)
 
+        line = """("HOW MANY.NUMBERS? ")"""
+        todo = Tokens().make_todo_list(line)
+        answ = ['(', '"HOW MANY.NUMBERS? "',')']
+        self.assertEqual(todo, answ)
+
+        line = """let length = Keyboard.readInt("HOW MANY NUMBERS? ");"""
+        todo = Tokens().make_todo_list(line)
+        answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '{', '"HOW MANY NUMBERS? "', ')', ';']
+        self.assertEqual(todo, answ)
+
+    def test_tokens_split_by_string(self):
+
+        Tokens = tokens.Tokenizer
+
+        line = """"""
+        got = Tokens().split_by_string(line, [])
+        self.assertEqual([''], got)
+
+        line = "Test"
+        got = Tokens().split_by_string(line, [])
+        self.assertEqual(['Test'], got)
+
+        line = 'Test "'
+        got = Tokens().split_by_string(line, [])
+        self.assertEqual(['Test "'], got)
+
+        line = """let length = Keyboard.readInt("HOW MANY NUMBERS? ");"""
+        got = Tokens().split_by_string(line, [])
+        answ = ['let length = Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
+        self.assertEqual(answ, got)
+
+        line = """let length = Keyboard.readInt("HOW MANY NUMBERS? "); Keyboard.readInt("HOW MANY NUMBERS? ");"""
+        got = Tokens().split_by_string(line, [])
+        answ = ['let length = Keyboard.readInt(', '"HOW MANY NUMBERS? "', '); Keyboard.readInt(','"HOW MANY NUMBERS? "',');']
+        self.assertEqual(answ, got)
+
+
+    def test_tokens_is_string(self):
+        Tokens = tokens.Tokenizer
+
+        line = ''
+        self.assertFalse(Tokens.is_string(line))
+
+        line = "Test"
+        self.assertFalse(Tokens.is_string(line))
+
+        line = 'readInt("HOW MANY NUMBERS? ");'
+        self.assertTrue(Tokens.is_string(line))
+
+        line = ''"HOW MANY NUMBERS?"''
+        self.assertFalse(Tokens.is_string(line))
+
+    def test_tokens_coord(self):
+        Tokens = tokens.Tokenizer
+
+        line = ''
+        self.assertEqual((-1,-1), Tokens.string_coord(line))
+
+        line = 'readInt("HOW MANY NUMBERS? ");'
+        self.assertEqual((8,27), Tokens.string_coord(line))
+
+    def test_tokens_symbol(self):
+        Tokens = tokens.Tokenizer
+
+        line = ['"HOW MANY(NUMBERS? "']
+        self.assertFalse(Tokens.is_symbol(line))
+
+        line = [';']
+        self.assertFalse(Tokens.is_symbol(line))
+
+        line = ['Keyboard.readInt']
+        self.assertTrue(Tokens.is_symbol(line))
+
+        line = ['let', 'length', '=', 'Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
+        self.assertTrue(Tokens.is_symbol(line))
+
+    def test_tokens_split_symbol(self):
+        Tokens = tokens.Tokenizer()
+
+        # line = []
+        # self.assertEqual([],Tokens.split_by_symbol(line))
+        #
+        # line = ['"HOW MANY NUMBERS? "']
+        # self.assertEqual(['"HOW MANY NUMBERS? "'], Tokens.split_by_symbol(line))
+        #
+        # line = ['let', 'Keyboard.readInt']
+        # todo = Tokens.split_by_symbol(line)
+        # answ = ['let','Keyboard', '.', 'readInt']
+        # self.assertEqual(answ, todo)
+        #
+        # line = ['var', 'int', 'i,', 'a;']
+        # todo = Tokens.split_by_symbol(line)
+        # answ = ['var', 'int', 'i', ',', 'a', ';']
+        # self.assertEqual(answ, todo)
+        #
+        # line = ['var', 'int', 'i,', 'a;']
+        # todo = Tokens.split_by_symbol(line)
+        # answ = ['var', 'int', 'i', ',', 'a', ';']
+        # self.assertEqual(answ, todo)
+
+        # line = ['let', 'length', '=', 'Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
+        # todo = Tokens.split_by_symbol(line)
+        # answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '{', '"HOW MANY NUMBERS? "', ')', ';']
+        # self.assertEqual(answ, todo)
+
+        line = [');']
+        todo = Tokens.split_by_symbol(line)
+        answ = [')', ';']
+        self.assertEqual(answ, todo)
+
 
     def test_tokens_list_simple(self):
 
@@ -223,7 +333,7 @@ class TestMain(unittest.TestCase):
         for i in range(len(t_list)):
             self.assertEquals(t_list[i], answ[i])
 
-    def test_tokents_ident_var2(self):
+    def test_tokens_ident_var2(self):
 
         Tokens = tokens.Tokenizer
         line = "var Array a;"
@@ -233,6 +343,26 @@ class TestMain(unittest.TestCase):
             Tokens.Token(tokenType='identifier', identifier='a'),
             Tokens.Token(tokenType='symbol', symbol=';')]
         self.assertEqual(len(t_list), 4)
+        print("T_LIST ****************************", t_list)
+        for i in range(len(t_list)):
+            self.assertEquals(t_list[i], answ[i])
+
+    def test_tokens_subroutine(self):
+
+        Tokens = tokens.Tokenizer
+        line = """let length = Keyboard.readInt("HOW MANY NUMBERS? ");"""
+        t_list = Tokens().make_tokens(line)
+        answ = [Tokens.Token(tokenType='keyword', keyWord='let'),
+            Tokens.Token(tokenType='identifier', identifier='length'),
+            Tokens.Token(tokenType='symbol', symbol='='),
+            Tokens.Token(tokenType='identifier', identifier='Keyboard'),
+            Tokens.Token(tokenType='symbol', symbol='.'),
+            Tokens.Token(tokenType='identifier', identifier='readInt'),
+            Tokens.Token(tokenType='symbol', symbol='('),
+            Tokens.Token(tokenType='stringConstant', stringConstant='HOW MANY NUMBERS? '),
+            Tokens.Token(tokenType='symbol', symbol=')'),
+            Tokens.Token(tokenType='symbol', symbol=';')]
+        self.assertEqual(len(t_list), 10)
         print("T_LIST ****************************", t_list)
         for i in range(len(t_list)):
             self.assertEquals(t_list[i], answ[i])
