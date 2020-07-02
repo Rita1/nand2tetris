@@ -53,7 +53,7 @@ class Main():
                     # Write Tokens file
                         T.Tokenizer.file_to_write = fw
                         for line in f1:
-                            ln = T.Tokenizer.remove_comments(line)
+                            ln = t.remove_comments(line)
                             if ln:
                                 t.make_tokens(ln)
                         # END

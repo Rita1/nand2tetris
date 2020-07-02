@@ -12,9 +12,12 @@ class Tokenizer:
     "Saves files to write pointer"
     file_to_write = ''
 
+    "Checks if now parsing comment"
+    is_comment = -1
+
     class Token(BaseModel):
         keyWord: Optional[
-            Literal['class', 'method', 'function', 'constructor', 'integer', 'boolean', 'char', 'void', 'var',
+            Literal['class', 'method', 'function', 'constructor', 'int', 'boolean', 'char', 'void', 'var',
                     'static', 'field', 'let', 'do', 'if', 'else', 'while', 'return', 'true', 'false', 'null', 'this']]
         symbol: Optional[
             Literal['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']]
@@ -95,7 +98,7 @@ class Tokenizer:
         print("after spaces", todo)
         if "" in todo:
             todo.remove("")
-        todo = self.split_by_symbol(todo)
+        todo = self.split_by_symbol(todo, [])
         if "" in todo:
             todo.remove("")
         print("MY TODO from make_todo_list", todo)
@@ -104,30 +107,58 @@ class Tokenizer:
     """" Split given list by symbols
          List of string, returns list of string"""
 
-    def split_by_symbol(self, todo):
-        print("START todo", todo)
-        while self.is_symbol(todo):
-            for i in range(len(todo)):
-                line = todo[i]
-                last_symbol = ''
-                if len(line) > 1:
-                    last_symbol = line[-1]
-                found_one = self.found_one_symbol(line)
-                if len(line) > 1 and found_one >= 0 and last_symbol != '"':
-                    todo.pop(i)
-                    if line[:found_one]:
-                        todo.insert(i, line[:found_one])
-                        todo.insert(i+1, line[found_one])
-                        if line[found_one+1:]:
-                            todo.insert(i+2, line[found_one+1:])
-        return todo
+    # def split_by_symbol(self, todo):
+    #     print("START todo", todo)
+    #     while self.is_symbol(todo):
+    #         for i in range(len(todo)):
+    #             line = todo[i]
+    #             last_symbol = ''
+    #             if len(line) > 1:
+    #                 last_symbol = line[-1]
+    #             found_one = self.found_one_symbol(line)
+    #             if len(line) > 1 and found_one >= 0 and last_symbol != '"':
+    #                 todo.pop(i)
+    #                 if len(line) == 2 and found_one == 0:
+    #                     todo.insert(i, line[found_one])
+    #                     todo.insert(i + 1, line[found_one + 1:])
+    #                 elif line and line[found_one]:
+    #                     if line[:found_one]:
+    #                         todo.insert(i, line[:found_one])
+    #                     todo.insert(i+1, line[found_one])
+    #                     if line[found_one+1:]:
+    #                         todo.insert(i+2, line[found_one+1:])
+    #     return todo
 
-    def found_one_symbol(self, line):
+    def split_by_symbol(self, todo, answ):
+        if not todo:
+            return answ
+        coord = self.symbol_coord(todo[0])
+        if coord > -1:
+            if coord > 0:
+                first_line = todo[0][:coord]
+                answ.append(first_line)
+            midle_line = todo[0][coord]
+            answ.append(midle_line)
+            rem_line = todo[0][coord+1:]
+            return self.split_by_symbol([rem_line] + todo[1:], answ)
+        else:
+            if todo[0]:
+                answ.append(todo[0])
+            return self.split_by_symbol(todo[1:], answ)
+
+
+
+    def symbol_coord(self, line):
         coord = -1
+        find_coord = []
+        if line and line[0] == '"':
+            return coord
         for s in Tokenizer.Token.get_symbol():
             coord = line.find(s)
             if coord >= 0:
-                return coord
+                find_coord.append(coord)
+        if find_coord:
+            coord = min(find_coord)
         return coord
 
     """ Extracts string from given string
@@ -183,17 +214,13 @@ class Tokenizer:
     """ Returns True if is symbol in line """
     
     @staticmethod
-    def is_symbol(todo):
-        found = False
-        if todo:
-            for i in todo:
-                if i and i[0] == '"' or len(i) == 1:
-                    found = False
-                else:
-                    for s in Tokenizer.Token.get_symbol():
-                        if i.find(s) >= 0:
-                            return True
-        return found
+    def is_symbol(i):
+        if i and i[0] == '"' or len(i) == 1:
+            return False
+        else:
+            for s in Tokenizer.Token.get_symbol():
+                if i.find(s) >= 0:
+                    return True
 
 
     """ Get tokens list from string list
@@ -207,17 +234,24 @@ class Tokenizer:
         if todo[0] in Tokenizer.Token.get_symbol():
             t = Tokenizer.Token(tokenType='symbol', symbol=todo[0])
             answ.append(t)
-        elif todo[0] == "int":
-            t = Tokenizer.Token(tokenType='keyword', keyWord='integer')
-            answ.append(t)
-        elif self.check_identifier(todo, answ, todo[0]):
-            t = Tokenizer.Token(tokenType='identifier', identifier=todo[0])
-            answ.append(t)
+        # elif todo[0] == "int":
+        #     t = Tokenizer.Token(tokenType='keyword', keyWord='integer')
+        #     answ.append(t)
+        # elif self.check_identifier(todo, answ, todo[0]):
+        #     t = Tokenizer.Token(tokenType='identifier', identifier=todo[0])
+        #     answ.append(t)
         elif todo[0] in Tokenizer.Token.get_keyword():
             t = Tokenizer.Token(tokenType='keyword', keyWord=todo[0])
             answ.append(t)
         elif todo[0].isdigit():
             t = Tokenizer.Token(tokenType='integerConstant', integerConstant=int(todo[0]))
+            answ.append(t)
+        elif todo[0][0] == '"':
+            s = todo[0][1:-1]
+            t = Tokenizer.Token(tokenType='stringConstant',stringConstant=s)
+            answ.append(t)
+        else:
+            t = Tokenizer.Token(tokenType='identifier', identifier=todo[0])
             answ.append(t)
         return self.get_tokens_list(todo[1:], answ)
 
@@ -236,7 +270,8 @@ class Tokenizer:
 
             #Likes vienas laukas bus tekstas
             text = tag_dict[next(iter(tag_dict))]
-            xml.text = text
+            # text = self.change_symbols(text)
+            xml.text = str(text)
 
             xml_str = ET.tostring(xml, encoding='unicode')
             if self.file_to_write: #hack for unit testing
@@ -249,52 +284,59 @@ class Tokenizer:
                     /** ... */
     Gets string, returns string
 
-    TODO
     """
 
-    @staticmethod
-    def remove_comments(line):
+    def remove_comments(self, line):
 
-        line = line.split("//")[0]
-        line = line.split("/*")[0]
-        line = line.split("/**")[0]
+        rem_line = ''
+        # - jeigu vis dar tesiasi komentaras tai trinti lauk iki komentaro galo
+        if self.is_comment != -1:
+            comment_end = line.find('*/')
+            if comment_end == -1:
+                return ""
+            else:
+                line = line[comment_end+2:]
+            print("comment_end", comment_end)
+            self.is_comment = -1
+            return line.strip()
+        # - rasti komentaru pradzia ir issisaugoti
+        if line.find('/*') >= 0:
+            self.is_comment = line.find('/*')
+            rem_line = line[self.is_comment:]
+            line = line[:self.is_comment]
+
+        elif line.find('/**') >= 0:
+            self.is_comment = line.find('/**')
+            line = line[:self.is_comment]
+        elif line.find("//") >= 0:
+            line = line[:line.find("//")]
+        if rem_line.find("*/") > -1:
+            self.is_comment = -1
         line = line.strip()
+
         return line
 
-    """
-    Change symbols to XML allowed symbols
-    From < - &lt
-         > - &gt
-         & - &amp
-
-    TODO
-    """
-
-    def change_symbols(self, s):
-
-        return s
-
-    """ Returns True, if string is identifier 
-        Gets strings todo list, answ Tokens list, current string """
-
-    def check_identifier(self, todo, answ, current_s):
-        # print("My token before", self.token_before)
-        print("todo, answ, current_s", todo, answ, current_s)
-        # After class and let always id
-        if answ and answ[-1] and (answ[-1].keyWord == 'class' or answ[-1].keyWord == 'let'):
-            print("RETURN WITH TRUE")
-            return True
-        # Jeigu eilute prasideda var, tai visi tagai nuo trecio yra identifier
-        #                           antras tagas arba keyword, arba identifier
-        if answ and answ[0].keyWord == 'var':
-            if len(answ) > 1:
-                print("RETURN WITH TRUE from VAR")
-                return True
-            if len(answ) == 1 and current_s not in Tokenizer.Token.get_keyword():
-                return True
-        # Jeigu eilute prasideda var, tai vis
-        # jeigu  eilute prasideda function, tai trecias bus identifier
-        if answ and answ[0].keyWord == 'function' and len(answ) == 2:
-            print("RETURN TRUE FROM FUNCTION")
-            return True
-        return False
+    # """ Returns True, if string is identifier
+    #     Gets strings todo list, answ Tokens list, current string """
+    #
+    # def check_identifier(self, todo, answ, current_s):
+    #     # print("My token before", self.token_before)
+    #     print("todo, answ, current_s", todo, answ, current_s)
+    #     # After class and let always id
+    #     if answ and answ[-1] and (answ[-1].keyWord == 'class' or answ[-1].keyWord == 'let'):
+    #         print("RETURN WITH TRUE")
+    #         return True
+    #     # Jeigu eilute prasideda var, tai visi tagai nuo trecio yra identifier
+    #     #                           antras tagas arba keyword, arba identifier
+    #     if answ and answ[0].keyWord == 'var':
+    #         if len(answ) > 1:
+    #             print("RETURN WITH TRUE from VAR")
+    #             return True
+    #         if len(answ) == 1 and current_s not in Tokenizer.Token.get_keyword():
+    #             return True
+    #     # Jeigu eilute prasideda var, tai vis
+    #     # jeigu  eilute prasideda function, tai trecias bus identifier
+    #     if answ and answ[0].keyWord == 'function' and len(answ) == 2:
+    #         print("RETURN TRUE FROM FUNCTION")
+    #         return True
+    #     return False

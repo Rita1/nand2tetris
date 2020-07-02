@@ -51,20 +51,26 @@ class TestMain(unittest.TestCase):
         file_answer = os.getcwd() + answer
 
         gen_answ = self.xml_tag(file_answer)
+        row_no = 0
         for tag in self.xml_tag(file_result):
-             if tag.strip():
+             tag = tag.strip()
+             row_no = row_no + 1
+             if tag:
                  tag_answ = ""
                  while not tag_answ.strip(): # Enteriai
                      tag_answ = gen_answ.__next__().strip()
+                 print("TAG, TAG_ANSW 1", tag, tag_answ, len(tag), len(tag_answ), 'row_no', row_no)
                  self.assertEqual(tag, tag_answ)
         #
         gen_res = self.xml_tag(file_result)
+        row_no = 0
         for tag in self.xml_tag(file_answer):
             # print("TAG", type(tag), len(tag))
             tag = tag.strip()
+            row_no = row_no + 1
             if tag:
-                tag_res = gen_res.__next__()
-                # print("tag, tag_answ", tag, tag_res)
+                tag_res = gen_res.__next__().strip()
+                print("tag, tag_answ 2", tag, '+', tag_res)
                 self.assertEqual(tag, tag_res)
 
 
@@ -89,7 +95,7 @@ class TestMain(unittest.TestCase):
 
     def test_tokens_comments(self):
 
-        Tokens = tokens.Tokenizer
+        Tokens = tokens.Tokenizer()
         self.assertEqual("test", Tokens.remove_comments("test   "))
         self.assertEqual("test", Tokens.remove_comments("  test   "))
         self.assertEqual("test", Tokens.remove_comments("     test"))
@@ -109,6 +115,31 @@ class TestMain(unittest.TestCase):
         self.assertEqual("let a = Array.new(length);", Tokens.remove_comments("let a = Array.new(length); // constructs the array"))
         self.assertEqual("let r = a - (b * (a / b));", Tokens.remove_comments("let r = a - (b * (a / b));  // r = remainder of the integer division a/b"))
 
+        Tokens = tokens.Tokenizer()
+        line = """/**"""
+        after_remove = Tokens.remove_comments(line)
+        self.assertEqual("", after_remove)
+
+        l1 = """* Implements the Square Dance game."""
+        after_remove = Tokens.remove_comments(l1)
+        self.assertEqual("", after_remove)
+
+        l2 = """*/"""
+        after_remove = Tokens.remove_comments(l2)
+        self.assertEqual("", after_remove)
+
+        l3 = """class SquareGame {"""
+        after_remove = Tokens.remove_comments(l3)
+        self.assertEqual("class SquareGame {", after_remove)
+
+        Tokens = tokens.Tokenizer()
+        l1 = """/** Computes the average of a sequence of integers. */"""
+        after_remove = Tokens.remove_comments(l1)
+        self.assertEqual("", after_remove)
+
+        l2 = """class Main {"""
+        after_remove = Tokens.remove_comments(l2)
+        self.assertEqual("class Main {", after_remove)
 
     def test_tokens(self):
 
@@ -116,9 +147,21 @@ class TestMain(unittest.TestCase):
         self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
         self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
 
-    # def test_tokens_main(self):
-    #
-    #     self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
+    def test_tokens_main(self):
+
+        self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
+
+
+
+    def test_tokens_main2(self):
+
+        self.answers('Symbols.jack', "/tests/files/SymbolsT.xml", "/tests/files/SymbolsT_answ.xml")
+
+    def test_tokens_square(self):
+
+        self.answers('Square', "/tests/files/Square/SquareGameT.xml", "/tests/files/Square/SquareGameT_answ.xml")
+        self.answers('Square', "/tests/files/Square/MainT.xml", "/tests/files/Square/MainT_answ.xml")
+        self.answers('Square', "/tests/files/Square/SquareT.xml", "/tests/files/Square/SquareT_answ.xml")
 
     def test_tokens_todo(self):
 
@@ -149,8 +192,23 @@ class TestMain(unittest.TestCase):
 
         line = """let length = Keyboard.readInt("HOW MANY NUMBERS? ");"""
         todo = Tokens().make_todo_list(line)
-        answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '{', '"HOW MANY NUMBERS? "', ')', ';']
+        answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '(', '"HOW MANY NUMBERS? "', ')', ';']
         self.assertEqual(todo, answ)
+
+    def test_todo_2(self):
+
+        Tokens = tokens.Tokenizer
+        line = """while (i < length) {"""
+        todo = Tokens().make_todo_list(line)
+        answ = ['while', '(', 'i', '<', 'length',')', '{']
+        self.assertEqual(answ, todo)
+
+        Tokens = tokens.Tokenizer
+        line = """if (direction = 1) { do square.moveUp(); }"""
+        todo = Tokens().make_todo_list(line)
+        answ = ['if', '(', 'direction', '=', '1',')', '{', 'do', 'square', '.', 'moveUp','(',')',';','}']
+        self.assertEqual(answ, todo)
+
 
     def test_tokens_split_by_string(self):
 
@@ -206,51 +264,51 @@ class TestMain(unittest.TestCase):
     def test_tokens_symbol(self):
         Tokens = tokens.Tokenizer
 
-        line = ['"HOW MANY(NUMBERS? "']
+        line = '"HOW MANY(NUMBERS? "'
         self.assertFalse(Tokens.is_symbol(line))
 
-        line = [';']
+        line = ';'
         self.assertFalse(Tokens.is_symbol(line))
 
-        line = ['Keyboard.readInt']
+        line = 'Keyboard.readInt'
         self.assertTrue(Tokens.is_symbol(line))
 
-        line = ['let', 'length', '=', 'Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
+        line = 'Keyboard.readInt('
         self.assertTrue(Tokens.is_symbol(line))
+
 
     def test_tokens_split_symbol(self):
         Tokens = tokens.Tokenizer()
-
+        #
         # line = []
-        # self.assertEqual([],Tokens.split_by_symbol(line))
-        #
-        # line = ['"HOW MANY NUMBERS? "']
-        # self.assertEqual(['"HOW MANY NUMBERS? "'], Tokens.split_by_symbol(line))
-        #
-        # line = ['let', 'Keyboard.readInt']
-        # todo = Tokens.split_by_symbol(line)
-        # answ = ['let','Keyboard', '.', 'readInt']
-        # self.assertEqual(answ, todo)
-        #
-        # line = ['var', 'int', 'i,', 'a;']
-        # todo = Tokens.split_by_symbol(line)
-        # answ = ['var', 'int', 'i', ',', 'a', ';']
-        # self.assertEqual(answ, todo)
-        #
-        # line = ['var', 'int', 'i,', 'a;']
-        # todo = Tokens.split_by_symbol(line)
-        # answ = ['var', 'int', 'i', ',', 'a', ';']
-        # self.assertEqual(answ, todo)
+        # self.assertEqual([],Tokens.split_by_symbol(line, []))
 
-        # line = ['let', 'length', '=', 'Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
-        # todo = Tokens.split_by_symbol(line)
-        # answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '{', '"HOW MANY NUMBERS? "', ')', ';']
-        # self.assertEqual(answ, todo)
+        line = ['"HOW MANY NUMBERS? "']
+        self.assertEqual(['"HOW MANY NUMBERS? "'], Tokens.split_by_symbol(line, []))
+
+        line = ['let', 'Keyboard.readInt']
+        todo = Tokens.split_by_symbol(line, [])
+        answ = ['let','Keyboard', '.', 'readInt']
+        self.assertEqual(answ, todo)
+
+        line = ['var', 'int', 'i,', 'a;']
+        todo = Tokens.split_by_symbol(line, [])
+        answ = ['var', 'int', 'i', ',', 'a', ';']
+        self.assertEqual(answ, todo)
+
+        line = ['let', 'length', '=', 'Keyboard.readInt(', '"HOW MANY NUMBERS? "', ');']
+        todo = Tokens.split_by_symbol(line, [])
+        answ = ['let', 'length', '=', 'Keyboard', '.', 'readInt', '(', '"HOW MANY NUMBERS? "', ')', ';']
+        print("Answ", answ)
+        print("Todo", todo)
+        self.assertEqual(answ, todo)
 
         line = [');']
-        todo = Tokens.split_by_symbol(line)
+        todo = Tokens.split_by_symbol(line, [])
         answ = [')', ';']
         self.assertEqual(answ, todo)
+
+
 
 
     def test_tokens_list_simple(self):
@@ -287,7 +345,7 @@ class TestMain(unittest.TestCase):
     #
         line = "var int a;"
         t_list = Tokens().make_tokens(line)
-        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='integer'), Tokens.Token(tokenType='identifier', identifier='a'),
+        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='int'), Tokens.Token(tokenType='identifier', identifier='a'),
                 Tokens.Token(tokenType='symbol', symbol=';')]
         self.assertEqual(len(t_list), 4)
         for i in range(len(t_list)):
@@ -295,7 +353,7 @@ class TestMain(unittest.TestCase):
     #
         line = "var int a, b;"
         t_list = Tokens().make_tokens(line)
-        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='integer'), Tokens.Token(tokenType='identifier', identifier='a'),
+        answ = [Tokens.Token(tokenType='keyword', keyWord='var'), Tokens.Token(tokenType='keyword', keyWord='int'), Tokens.Token(tokenType='identifier', identifier='a'),
                 Tokens.Token(tokenType='symbol', symbol=','),
                 Tokens.Token(tokenType='identifier', identifier='b'),
                 Tokens.Token(tokenType='symbol', symbol=';')]
