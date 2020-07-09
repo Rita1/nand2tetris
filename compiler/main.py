@@ -2,13 +2,12 @@
 import sys
 import os
 
-# from typing_extensions import Literal
-from typing import Literal, Optional
-from pydantic import BaseModel, ValidationError, validator
+import xml.etree.ElementTree as ET
 
 # https://docs.python.org/3/library/xml.etree.elementtree.html
-import xml.etree.ElementTree as ET
 import tokens as T
+import xml_helper as XML_H
+import compile_jack as C
 
 PATH = "/tests/files/"
 
@@ -61,11 +60,13 @@ class Main():
                             return "</tokens>"
                         fw.write(end())
 
-
+                c = C.Compiler()
                 # Write compiled code
                 with open(f[1], 'a') as fw:
-                    fw.write("2")
-
+                    c.tag_generator = XML_H.XMLHelper.xml_tag(f[2])
+                    xml = c.compile_class()
+                    xml_str = ET.tostring(xml, encoding='unicode')
+                    fw.write(xml_str)
             except IOError:
                 print("File or directory is missing")
 

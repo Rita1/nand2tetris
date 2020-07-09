@@ -1,0 +1,4 @@
+class Main {
+   field int x, y;
+   field int size;
+}
