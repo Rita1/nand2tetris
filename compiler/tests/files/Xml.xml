@@ -1,0 +1,8 @@
+<tokens>
+<keyword> var </keyword>
+<keyword> int </keyword>
+<identifier> i </identifier>
+<symbol> , </symbol>
+<identifier> j </identifier>
+<symbol> ; </symbol>
+</tokens>

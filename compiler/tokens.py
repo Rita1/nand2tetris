@@ -61,15 +61,6 @@ class Tokenizer:
             for i in Tokenizer.Token.schema()['properties']['symbol']['anyOf']:
                 yield i['const']
 
-    """ Generate XML string
-        Gets Token obj. list returns XML string """
-
-
-
-    """
-    Create Tokens XML
-    Takes string, pointer to write file, writes XML tag
-    """
 
     def make_tokens(self, line):
 
@@ -151,12 +142,7 @@ class Tokenizer:
         answ.append(midle_s)
         # answ.append(end_s)
         return self.split_by_string(end_s, answ)
-        #
-        # print(start, end)
 
-        # print("FIRST", first_s, "+Midle", midle_s, "+END", end_s)
-        # print("line", line, answ)
-        # return answ
 
     """ Gets string, checks if not extracted string is in line
         If " and " is not first and second, where is string 

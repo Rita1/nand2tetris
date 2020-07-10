@@ -1,0 +1,8 @@
+class Main {
+
+   constructor Square new(int Ax, int Ay, int Asize) {
+      let x = Ax;
+      let y = Ay;
+   }
+   
+}

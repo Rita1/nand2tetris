@@ -4,36 +4,38 @@ import xml.etree.ElementTree as ET
 class Compiler:
 
     tag_generator = ''
+    next_tag = ''
 
     """ Returns Class XML ETree """
 
     def compile_class(self):
-        # Consume tag return class
 
+        # Class
         xml = ET.Element('class')
         class_key = ET.SubElement(xml, 'keyword')
         class_key.text = 'class'
-        class_ident = ET.SubElement(xml, 'identifier')
 
-        # 6 is eiles visada bus identifier
-        next_tag = ''
-        for i in range(6):
-            next_tag = next(self.tag_generator)
-        class_ident.text = next_tag
-        # visada simbolis uzima 4 reiksmes
-        for i in range(4):
-            next(self.tag_generator)
+        # Consume class
+        next(self.tag_generator)
+
+        # Class Ident
+        class_ident = ET.SubElement(xml, 'identifier')
+        class_ident.text = next(self.tag_generator)[1]
+
+        # Class symbol
+        next(self.tag_generator)
         class_symbol = ET.SubElement(xml, 'symbol')
         class_symbol.text = '{'
 
         # Check for class var declarations
-        next(self.tag_generator)
-        next_tag = next(self.tag_generator)
-        if next_tag == 'field' or next_tag == 'static':
-            print("FROM FIELD")
+        self.next_tag = next(self.tag_generator)
+        if self.next_tag[1] == 'field' or self.next_tag[1] == 'static':
             xml = self.compile_class_var_decl(xml)
-        print("Next tag", next_tag)
         # Check for subroutines
+        # self.next_tag = next(self.tag_generator)
+        if self.next_tag[1] in ('constructor', 'function', 'method'):
+            xml = self.compile_subroutine(xml)
+
         # End
         class_symbol1 = ET.SubElement(xml, 'symbol')
         class_symbol1.text = '}'
@@ -42,18 +44,100 @@ class Compiler:
     """ Class var declaration compiler """
 
     def compile_class_var_decl(self, xml):
-        next(self.tag_generator)
-        next_tag = next(self.tag_generator)
-        if next_tag == '}' or next_tag in ('constructor', 'function', 'method'):
-            print("Next tag from end", next_tag)
+        if self.next_tag[1] == '}' or self.next_tag[1] in ('constructor', 'function', 'method'):
+            print("Next tag from end", self.next_tag)
             return xml
         class_var = ET.SubElement(xml, 'classVarDec')
-        ET.SubElement(xml, 'classVarDec')
-        print("Next tag from declaration", next_tag)
-        # for tag in next(self.tag_generator):
-        #     if tag == ''
-        print("Next tag", next_tag)
+        while True:
+            tag_key = self.next_tag[0]
+            key = ET.SubElement(class_var, tag_key)
+            key.text = self.next_tag[1]
+            if self.next_tag[1] == ';':
+                break
+            self.next_tag = next(self.tag_generator)
+        self.next_tag = next(self.tag_generator)
         return self.compile_class_var_decl(xml)
+
+    """ Subroutine compiler """
+    def compile_subroutine(self, xml):
+        if self.next_tag[1] == '}':
+            return xml
+        subroutine_dec = ET.SubElement(xml, 'subroutineDec')
+        # kiti 4 bus subroutine declaration
+        for i in range(4):
+            tag_key = self.next_tag[0]
+            key = ET.SubElement(subroutine_dec, tag_key)
+            key.text = self.next_tag[1]
+            self.next_tag = next(self.tag_generator)
+        xml = self.compile_parameter_list(xml, subroutine_dec)
+        # Add )
+        symbol = self.next_tag[0]
+        s_key = ET.SubElement(subroutine_dec, symbol)
+        s_key.text = self.next_tag[1]
+        self.next_tag = next(self.tag_generator)
+
+        # Compile subroutine
+        s_body = ET.SubElement(subroutine_dec, 'subroutineBody')
+
+        # Add (
+        symbol = self.next_tag[0]
+        s_key = ET.SubElement(s_body, symbol)
+        s_key.text = self.next_tag[1]
+        self.next_tag = next(self.tag_generator)
+        if self.next_tag[1] == 'var':
+            xml = self.compile_var_dec(xml, subroutine_dec)
+        elif self.next_tag[1] != '}':
+            xml = self.compile_statments(xml, s_body)
+        # Add )
+        symbol = self.next_tag[0]
+        s_key = ET.SubElement(s_body, symbol)
+        s_key.text = self.next_tag[1]
+        self.next_tag = next(self.tag_generator)
+
+        # xml = self.compile_subroutine_body(xml)
+        # self.next_tag = next(self.tag_generator)
+        return self.compile_subroutine(xml)
+
+    """ Subroutine parameter list """
+    def compile_parameter_list(self, xml, element):
+        print("FROM PARAMETER LIST")
+        parameter_dec = ET.SubElement(element, 'parameterList')
+        while True:
+            if self.next_tag[1] == ')':
+                break
+            tag_key = self.next_tag[0]
+            key = ET.SubElement(parameter_dec, tag_key)
+            key.text = self.next_tag[1]
+            self.next_tag = next(self.tag_generator)
+        return xml
+
+    """ Compile statments """
+
+    def compile_statments(self, xml, element):
+        statments = ET.SubElement(element, 'statements')
+        if self.next_tag[1] == 'let':
+            xml = self.compile_let(xml, statments)
+        self.next_tag = next(self.tag_generator)
+        return self.compile_statments(xml, element)
+
+    """ Compile let """
+    def compile_let(self, xml, element):
+        print("FROM Let")
+        let_statement = ET.SubElement(element, 'letStatement')
+        print("current tag", self.next_tag)
+        while True:
+            if self.next_tag[1] == ';':
+                break
+            tag_key = self.next_tag[0]
+            key = ET.SubElement(let_statement, tag_key)
+            key.text = self.next_tag[1]
+            self.next_tag = next(self.tag_generator)
+            print("taf from while let", self.next_tag)
+        return xml
+
+    """ Compile var decl """
+    def compile_var_dec(self, xml, element):
+        return xml
 
     """ Gets tag string and returns Var object """
     def compile_term(self, tag):

@@ -63,9 +63,9 @@ class Main():
                 c = C.Compiler()
                 # Write compiled code
                 with open(f[1], 'a') as fw:
-                    c.tag_generator = XML_H.XMLHelper.xml_tag(f[2])
+                    c.tag_generator = XML_H.XMLHelper.read_xml_tags(f[2])
                     xml = c.compile_class()
-                    xml_str = ET.tostring(xml, encoding='unicode')
+                    xml_str = ET.tostring(xml, encoding='unicode', short_empty_elements=False)
                     fw.write(xml_str)
             except IOError:
                 print("File or directory is missing")

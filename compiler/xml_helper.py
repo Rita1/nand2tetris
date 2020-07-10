@@ -1,4 +1,5 @@
-
+import os
+from os import path
 
 class XMLHelper():
 # veikia tik UTF-8 XML'ams
@@ -37,3 +38,23 @@ class XMLHelper():
                         break
                 yield tag
 
+    """ Gets file path, returns generator and first two tags tuple
+        Exmpl.: (keyword, field), (symbol, ;) """
+
+    @staticmethod
+    def read_xml_tags(file_name):
+
+        tag_reader = XMLHelper.xml_tag(file_name)
+        # Always skip first element
+        next(tag_reader)
+        while tag_reader:
+            # Get first tag
+            first_tag = ""
+            while not first_tag.strip():  # Enteriai
+                first_tag = tag_reader.__next__().strip()
+            first_tag = first_tag[1:-1]
+            # Get second tag
+            second_tag = tag_reader.__next__().strip()
+            # Skip closing tag
+            next(tag_reader)
+            yield first_tag, second_tag

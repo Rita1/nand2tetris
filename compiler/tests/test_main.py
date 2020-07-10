@@ -81,5 +81,19 @@ class TestMain(unittest.TestCase):
 
     def test_compiler_class(self):
 
-        # self.answers('Class.jack',"/tests/files/Class.xml","/tests/files/Class_answ.xml")
+        self.answers('Class.jack',"/tests/files/Class.xml","/tests/files/Class_answ.xml")
         self.answers('ClassVar.jack', "/tests/files/ClassVar.xml", "/tests/files/ClassVar_answ.xml")
+
+    def test_compiler_subroutine(self):
+
+        self.answers('Subroutine_simple.jack', "/tests/files/Subroutine_simple.xml", "/tests/files/Subroutine_simple_answ.xml")
+        self.answers('Subroutine.jack',"/tests/files/Subroutine.xml","/tests/files/Subroutine_answ.xml")
+
+    def test_compiler_subroutine(self):
+
+        self.answers('Subroutine_simple.jack', "/tests/files/Subroutine_simple.xml", "/tests/files/Subroutine_simple_answ.xml")
+        # self.answers('Subroutine.jack',"/tests/files/Subroutine.xml","/tests/files/Subroutine_answ.xml")
+
+    def test_compiler_let(self):
+
+        self.answers('Subroutine_let.jack', "/tests/files/Subroutine_let.xml", "/tests/files/Subroutine_let_answ.xml")
