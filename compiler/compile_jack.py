@@ -85,9 +85,10 @@ class Compiler:
         s_key.text = self.next_tag[1]
         self.next_tag = next(self.tag_generator)
         if self.next_tag[1] == 'var':
-            xml = self.compile_var_dec(xml, subroutine_dec)
+            xml = self.compile_var_dec(xml, s_body)
         elif self.next_tag[1] != '}':
-            xml = self.compile_statments(xml, s_body)
+            statments = ET.SubElement(s_body, 'statements')
+            xml = self.compile_statments(xml, statments)
         # Add )
         symbol = self.next_tag[0]
         s_key = ET.SubElement(s_body, symbol)
@@ -114,9 +115,12 @@ class Compiler:
     """ Compile statments """
 
     def compile_statments(self, xml, element):
-        statments = ET.SubElement(element, 'statements')
+        print("From statments")
+        if self.next_tag[1] == '}':
+            return xml
         if self.next_tag[1] == 'let':
-            xml = self.compile_let(xml, statments)
+            xml = self.compile_let(xml, element)
+        print("Next tag from statments", self.next_tag)
         self.next_tag = next(self.tag_generator)
         return self.compile_statments(xml, element)
 
@@ -126,11 +130,19 @@ class Compiler:
         let_statement = ET.SubElement(element, 'letStatement')
         print("current tag", self.next_tag)
         while True:
-            if self.next_tag[1] == ';':
-                break
             tag_key = self.next_tag[0]
             key = ET.SubElement(let_statement, tag_key)
             key.text = self.next_tag[1]
+            if self.next_tag[1] == '=':
+                self.next_tag = next(self.tag_generator)
+                xml = self.compile_expression(xml, let_statement)
+                # Add last symbol
+
+                tag_key = self.next_tag[0]
+                key = ET.SubElement(let_statement, tag_key)
+                key.text = self.next_tag[1]
+                # self.next_tag = next(self.tag_generator)
+                return xml
             self.next_tag = next(self.tag_generator)
             print("taf from while let", self.next_tag)
         return xml
@@ -139,6 +151,24 @@ class Compiler:
     def compile_var_dec(self, xml, element):
         return xml
 
+    def compile_expression(self, xml, element):
+        print("From Expression")
+        if self.next_tag[1] == ';':
+            return xml
+        expression = ET.SubElement(element, 'expression')
+        xml = self.compile_term(xml, expression)
+        # self.next_tag = next(self.tag_generator)
+        return self.compile_expression(xml, element)
+
     """ Gets tag string and returns Var object """
-    def compile_term(self, tag):
-        return
+    def compile_term(self, xml, element):
+        print("From term")
+        if self.next_tag[1] == ';':
+            return xml
+        term = ET.SubElement(element, 'term')
+        tag_key = self.next_tag[0]
+        key = ET.SubElement(term, tag_key)
+        key.text = self.next_tag[1]
+
+        self.next_tag = next(self.tag_generator)
+        return self.compile_term(xml, element)
