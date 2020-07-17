@@ -61,12 +61,12 @@ class TestMain(unittest.TestCase):
     def test_tokens(self):
 
         self.answers('Test.jack', "/tests/files/TestT.xml", "/tests/files/TestT_answ.xml")
-        self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
-        self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
+        # self.answers('Tokens.jack', "/tests/files/TokensT.xml", "/tests/files/TokensT_answ.xml")
+        # self.answers('Tokens1.jack', "/tests/files/Tokens1T.xml", "/tests/files/Tokens1T_answ.xml")
 
-    def test_tokens_main(self):
+    # def test_tokens_main(self):
 
-        self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
+        # self.answers('Main.jack', "/tests/files/MainT.xml", "/tests/files/MainT_answ.xml")
 
 
     def test_tokens_main2(self):
@@ -94,6 +94,12 @@ class TestMain(unittest.TestCase):
         self.answers('Subroutine_simple.jack', "/tests/files/Subroutine_simple.xml", "/tests/files/Subroutine_simple_answ.xml")
         # self.answers('Subroutine.jack',"/tests/files/Subroutine.xml","/tests/files/Subroutine_answ.xml")
 
-    def test_compiler_let(self):
+    def test_compiler_var_decl(self):
 
-        self.answers('Subroutine_let.jack', "/tests/files/Subroutine_let.xml", "/tests/files/Subroutine_let_answ.xml")
+        self.answers('Var_dec.jack', "/tests/files/Var_dec.xml", "/tests/files/Var_dec_answ.xml")
+        self.answers('Var_dec2.jack', "/tests/files/Var_dec2.xml", "/tests/files/Var_dec2_answ.xml")
+
+    def test_compile_do(self):
+
+        self.answers('Do.jack', "/tests/files/Do.xml", "/tests/files/Do_answ.xml")
+        self.answers('Do2.jack', "/tests/files/Do2.xml", "/tests/files/Do2_answ.xml")

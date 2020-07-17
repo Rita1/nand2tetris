@@ -1,0 +1,8 @@
+class Main {
+
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+   
+}

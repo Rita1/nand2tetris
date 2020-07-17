@@ -1,0 +1,15 @@
+class Main {
+
+   method void draw() {
+      do Screen.setColor(x);
+      do Screen.drawRectangle(x, y, x, y);
+      return;
+   }
+
+   method void erase() {
+      do Screen.setColor(x);
+      do Screen.drawRectangle(x, y, x, y);
+      return;
+   }
+   
+}
