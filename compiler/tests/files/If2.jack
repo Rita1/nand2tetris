@@ -1,0 +1,12 @@
+class Main {
+
+   method void moveSquare() {
+      if (direction) { do square.moveUp(); }
+      if (direction) { do square.moveDown(); }
+      if (direction) { do square.moveLeft(); }
+      if (direction) { do square.moveRight(); }
+      do Sys.wait(direction);
+      return;
+   }
+   
+}

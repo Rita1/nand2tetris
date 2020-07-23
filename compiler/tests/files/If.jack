@@ -1,0 +1,10 @@
+class Main {
+
+   method void incSize() {
+      if (x) {
+         do erase();
+      }
+      return;
+   }
+   
+}
