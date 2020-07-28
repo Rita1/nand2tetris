@@ -1,0 +1,19 @@
+class Main {
+
+   function void run() {
+      var char key;
+      
+      while (exit) {
+         while (key) {
+            let key = key;
+            do moveSquare();
+         }
+         while (key) {
+            let key = key;
+            do moveSquare();
+         }
+      }
+      return;
+    }
+   
+}
