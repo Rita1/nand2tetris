@@ -1,0 +1,11 @@
+class Main {
+
+   function void run() {
+      
+      while (~(key = 0)) {
+         do moveSquare();
+      }
+      return;
+    }
+   
+}

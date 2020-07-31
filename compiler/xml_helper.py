@@ -55,6 +55,10 @@ class XMLHelper():
             first_tag = first_tag[1:-1]
             # Get second tag
             second_tag = tag_reader.__next__().strip()
+            if second_tag == '&lt;':
+                second_tag = '<'
+            if second_tag == '&gt;':
+                second_tag = '>'
             # Skip closing tag
             next(tag_reader)
             yield first_tag, second_tag

@@ -1,0 +1,11 @@
+class Main {
+
+   function void run() {
+      
+      while (~exit) {
+         let square = Square.new(0, 0, 30);
+      }
+      return;
+    }
+   
+}

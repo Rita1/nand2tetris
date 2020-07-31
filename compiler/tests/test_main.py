@@ -14,7 +14,7 @@ class TestMain(unittest.TestCase):
         main.Main().main(file_to_parse)
         file_result = os.getcwd() + parsed_file
         file_answer = os.getcwd() + answer
-
+        xstr = ''
         gen_answ = x.XMLHelper.xml_tag(file_answer)
         row_no = 0
         for tag in x.XMLHelper.xml_tag(file_result):
@@ -24,7 +24,9 @@ class TestMain(unittest.TestCase):
                  tag_answ = ""
                  while not tag_answ.strip(): # Enteriai
                      tag_answ = gen_answ.__next__().strip()
+                 xstr += tag + '\n'
                  # print("TAG, TAG_ANSW 1", tag, tag_answ, len(tag), len(tag_answ), 'row_no', row_no)
+                 # print(xstr)
                  self.assertEqual(tag, tag_answ)
         #
         gen_res = x.XMLHelper.xml_tag(file_result)
@@ -73,7 +75,7 @@ class TestMain(unittest.TestCase):
 
         self.answers('Symbols.jack', "/tests/files/SymbolsT.xml", "/tests/files/SymbolsT_answ.xml")
 
-    def test_tokens_square(self):
+    def test_tokens_square_tokens(self):
 
         self.answers('Square', "/tests/files/Square/SquareGameT.xml", "/tests/files/Square/SquareGameT_answ.xml")
         self.answers('Square', "/tests/files/Square/MainT.xml", "/tests/files/Square/MainT_answ.xml")
@@ -114,3 +116,26 @@ class TestMain(unittest.TestCase):
 
         self.answers('While_simple.jack', "/tests/files/While_simple.xml", "/tests/files/While_simple_answ.xml")
         self.answers('While.jack', "/tests/files/While.xml", "/tests/files/While_answ.xml")
+
+    def test_compile_square_less(self):
+
+        self.answers('Square_less', "/tests/files/Square_less/SquareGame.xml", "/tests/files/Square_less/SquareGame_answ.xml")
+        self.answers('Square_less', "/tests/files/Square_less/Main.xml", "/tests/files/Square_less/Main_answ.xml")
+        self.answers('Square_less', "/tests/files/Square_less/Square.xml", "/tests/files/Square_less/Square_answ.xml")
+
+    def test_compile_square(self):
+
+        # self.answers('Square', "/tests/files/Square/SquareGame.xml", "/tests/files/Square/SquareGame_answ.xml")
+        # self.answers('Square', "/tests/files/Square/Main.xml", "/tests/files/Square/Main_answ.xml")
+        self.answers('Square', "/tests/files/Square/Square.xml", "/tests/files/Square/Square_answ.xml")
+
+    def test_compile_term_urinary(self):
+
+          self.answers('Unary0.jack', "/tests/files/Unary0.xml", "/tests/files/Unary0_answ.xml")
+          self.answers('Unary1.jack', "/tests/files/Unary1.xml", "/tests/files/Unary1_answ.xml")
+          self.answers('Unary2.jack', "/tests/files/Unary2.xml", "/tests/files/Unary2_answ.xml")
+          self.answers('Unary3.jack', "/tests/files/Unary3.xml", "/tests/files/Unary3_answ.xml")
+
+    def test_compile_array(self):
+
+        self.answers('ArrayTest', "/tests/files/ArrayTest/Main.xml", "/tests/files/ArrayTest/Main_answ.xml")

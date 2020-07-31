@@ -6,6 +6,7 @@ class Compiler:
     tag_generator = ''
     next_tag = ''
     subroutine_tags = ('let','do','if','while')
+    op_tags = ('+', '-', '*', '/', '&', '|', '<','&lt;','>', '&gt;', '=')
     current_if_tag = ''
 
     """ Helper function generate xml element and consume one element"""
@@ -162,28 +163,69 @@ class Compiler:
                 break
         return self.compile_var_dec(xml, element)
 
+    """ expression: term (op term)* 
+        term: integerConstant | stringConstant | keywordConstant | varName | varName '[' expression ']', 
+              | subroutineCall | (expression) | unaryOp term 
+        subroutineCall: subroutineName (expressionList) | (className | varName) . subroutineName '(' expressionList ')'
+        expressionList (expression (',' expression)* )?
+        op: +, -, *, /, &, |, <, >, =
+        unaryOp: '-', '~'
+        KeywordConstant: 'true' | 'false' | 'null' | 'this' """
+
     def compile_expression(self, xml, element):
         print("From Expression", self.next_tag)
         if self.next_tag[1] == ';' or self.next_tag[1] == ')' or self.next_tag[1] == ']':
             return xml
         expression = ET.SubElement(element, 'expression')
-        xml = self.compile_term(xml, expression)
+        print("Starting compile term from expresion", self.next_tag)
+        xml = self.compile_term(xml, expression) #AAA
         if self.next_tag[1] == ',':
             xml = self.generate_tag(xml, element)
-        if self.next_tag[1] == '|':
+        if self.next_tag[1] in self.op_tags:
+            print("Compile tag and term from expresion of op-tags", self.next_tag)
             xml = self.generate_tag(xml, expression)
             xml = self.compile_term(xml, expression)
         return self.compile_expression(xml, element)
 
     """ Gets tag string and returns Term """
     def compile_term(self, xml, element):
-        print("From term", self.next_tag)
-        # if self.next_tag[1] == ';' or self.next_tag[1] == ')' or self.next_tag[1] == ',' or self.next_tag[1] == ']':
-        #     return xml
-
+        print("From start term", self.next_tag)
         term = ET.SubElement(element, 'term')
+        # Check if found urinary symbol
+        # print("from compile term", self.next_tag)
+        if self.next_tag[1] in ('~', '-'):
+            xml = self.generate_tag(xml, term)
+            print("From term urinary", self.next_tag)
+            return self.compile_term(xml, term)
+        # kiek tik nori expression
+        if self.next_tag[1] == '(':
+            print("From term ( and [", self.next_tag)
+            xml = self.generate_tag(xml, term)
+            xml = self.compile_expression(xml, term)
         xml = self.generate_tag(xml, term)
+        if self.next_tag[1] == '[':
+            xml = self.generate_tag(xml, term)
+            xml = self.compile_expression(xml, term)
+            xml = self.generate_tag(xml, term)
+        if self.next_tag[1] == '.': # ????
+            # Add .
+            print("Add dot from term", self.next_tag)
+            xml = self.generate_tag(xml, term)
+            # Add subroutine name
+            print("Add subroutine name", self.next_tag)
+            xml = self.generate_tag(xml, term)
+            # Add symbol
+            print("Add symbol (", self.next_tag)
+            xml = self.generate_tag(xml, term)
+            print("From term urinary dot", self.next_tag)
+            exp_list = ET.SubElement(term, 'expressionList')
+            xml = self.compile_expression_list(xml, exp_list)
+            print("From term dot, next tag", self.next_tag)
+            xml = self.generate_tag(xml, term)
+            return xml
+            # return self.compile_expression_list(xml, term)
         if self.next_tag[0] == 'symbol':
+            print("return from term", self.next_tag)
             return xml
         return self.compile_term(xml, element)
 
