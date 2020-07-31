@@ -59,6 +59,8 @@ class XMLHelper():
                 second_tag = '<'
             if second_tag == '&gt;':
                 second_tag = '>'
+            if second_tag == '&amp;':
+                second_tag = '&'
             # Skip closing tag
             next(tag_reader)
             yield first_tag, second_tag

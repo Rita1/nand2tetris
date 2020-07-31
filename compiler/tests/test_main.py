@@ -125,9 +125,9 @@ class TestMain(unittest.TestCase):
 
     def test_compile_square(self):
 
-        # self.answers('Square', "/tests/files/Square/SquareGame.xml", "/tests/files/Square/SquareGame_answ.xml")
-        # self.answers('Square', "/tests/files/Square/Main.xml", "/tests/files/Square/Main_answ.xml")
-        self.answers('Square', "/tests/files/Square/Square.xml", "/tests/files/Square/Square_answ.xml")
+        self.answers('Square', "/tests/files/Square/SquareGame.xml", "/tests/files/Square/SquareGame_answ.xml")
+        self.answers('Square', "/tests/files/Square/Main.xml", "/tests/files/Square/Main_answ.xml")
+        self.answers('Square/Square.jack', "/tests/files/Square/Square.xml", "/tests/files/Square/Square_answ.xml")
 
     def test_compile_term_urinary(self):
 

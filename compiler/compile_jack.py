@@ -70,9 +70,9 @@ class Compiler:
         # kiti 4 bus subroutine declaration
         for i in range(4):
             xml = self.generate_tag(xml, subroutine_dec)
-        print("From subroutine call parameter list", self.next_tag)
+        # print("From subroutine call parameter list", self.next_tag)
         xml = self.compile_parameter_list(xml, subroutine_dec)
-        print("After subroutine call parameter list", self.next_tag)
+        # print("After subroutine call parameter list", self.next_tag)
         # Add )
         self.generate_tag(xml, subroutine_dec)
 
@@ -83,13 +83,13 @@ class Compiler:
         self.generate_tag(xml, s_body)
 
         if self.next_tag[1] == 'var':
-            print("var decl from subroutine", self.next_tag)
+            # print("var decl from subroutine", self.next_tag)
             xml = self.compile_var_dec(xml, s_body)
-            print("return from var decl from subroutine", self.next_tag)
+            # print("return from var decl from subroutine", self.next_tag)
         if self.next_tag[1] != '}':
             statements = ET.SubElement(s_body, 'statements')
             xml = self.compile_statements(xml, statements)
-            print("Come back from statments", self.next_tag)
+            # print("Come back from statments", self.next_tag)
             # if self.next_tag[1] == ';': # Boza boza
             #     self.next_tag = next(self.tag_generator)
         # Add )
@@ -99,7 +99,7 @@ class Compiler:
 
     """ Subroutine parameter list """
     def compile_parameter_list(self, xml, element):
-        print("FROM PARAMETER LIST")
+        # print("FROM PARAMETER LIST")
         parameter_dec = ET.SubElement(element, 'parameterList')
         while True:
             if self.next_tag[1] == ')':
@@ -110,7 +110,7 @@ class Compiler:
     """ Compile statments """
 
     def compile_statements(self, xml, element):
-        print("From statments")
+        # print("From statments")
         #OOO if_tag = ''
         if self.next_tag[1] == '}' or self.next_tag[1] == ';':
             return xml
@@ -128,14 +128,13 @@ class Compiler:
         if self.next_tag[1] == 'while':
             xml = self.compile_while(xml, element)
         # self.next_tag = next(self.tag_generator)
-        print("Next tag from statments", self.next_tag)
+        # print("Next tag from statments", self.next_tag)
         return self.compile_statements(xml, element)
 
     """ Compile let """
     def compile_let(self, xml, element):
-        print("FROM Let")
+        # print("FROM Let")
         let_statement = ET.SubElement(element, 'letStatement')
-        print("current tag", self.next_tag)
         while True:
             xml = self.generate_tag(xml, let_statement)
             if self.next_tag[1] == '[':
@@ -145,10 +144,9 @@ class Compiler:
             if self.next_tag[1] == '=':
                 xml = self.generate_tag(xml, let_statement)
                 xml = self.compile_expression(xml, let_statement)
-
                 xml = self.generate_tag(xml, let_statement)
                 return xml
-            print("tag from while let", self.next_tag)
+            # print("tag from while let", self.next_tag)
         return xml
 
     """ Compile var decl """
@@ -173,33 +171,35 @@ class Compiler:
         KeywordConstant: 'true' | 'false' | 'null' | 'this' """
 
     def compile_expression(self, xml, element):
-        print("From Expression", self.next_tag)
+        # print("From Expression", self.next_tag)
         if self.next_tag[1] == ';' or self.next_tag[1] == ')' or self.next_tag[1] == ']':
             return xml
+        if self.next_tag[1] == ',':
+            xml = self.generate_tag(xml, element)
         expression = ET.SubElement(element, 'expression')
-        print("Starting compile term from expresion", self.next_tag)
+        # print("Starting compile term from expresion", self.next_tag)
         xml = self.compile_term(xml, expression) #AAA
         if self.next_tag[1] == ',':
             xml = self.generate_tag(xml, element)
         if self.next_tag[1] in self.op_tags:
-            print("Compile tag and term from expresion of op-tags", self.next_tag)
+            # print("Compile tag and term from expresion of op-tags", self.next_tag)
             xml = self.generate_tag(xml, expression)
             xml = self.compile_term(xml, expression)
         return self.compile_expression(xml, element)
 
     """ Gets tag string and returns Term """
     def compile_term(self, xml, element):
-        print("From start term", self.next_tag)
+        # print("From start term", self.next_tag)
         term = ET.SubElement(element, 'term')
         # Check if found urinary symbol
         # print("from compile term", self.next_tag)
         if self.next_tag[1] in ('~', '-'):
             xml = self.generate_tag(xml, term)
-            print("From term urinary", self.next_tag)
+            # print("From term urinary", self.next_tag)
             return self.compile_term(xml, term)
         # kiek tik nori expression
         if self.next_tag[1] == '(':
-            print("From term ( and [", self.next_tag)
+            # print("From term ( and [", self.next_tag)
             xml = self.generate_tag(xml, term)
             xml = self.compile_expression(xml, term)
         xml = self.generate_tag(xml, term)
@@ -209,31 +209,29 @@ class Compiler:
             xml = self.generate_tag(xml, term)
         if self.next_tag[1] == '.': # ????
             # Add .
-            print("Add dot from term", self.next_tag)
+            # print("Add dot from term", self.next_tag)
             xml = self.generate_tag(xml, term)
             # Add subroutine name
-            print("Add subroutine name", self.next_tag)
+            # print("Add subroutine name", self.next_tag)
             xml = self.generate_tag(xml, term)
             # Add symbol
-            print("Add symbol (", self.next_tag)
             xml = self.generate_tag(xml, term)
-            print("From term urinary dot", self.next_tag)
+            # print("From term urinary dot", self.next_tag)
             exp_list = ET.SubElement(term, 'expressionList')
             xml = self.compile_expression_list(xml, exp_list)
-            print("From term dot, next tag", self.next_tag)
             xml = self.generate_tag(xml, term)
             return xml
             # return self.compile_expression_list(xml, term)
         if self.next_tag[0] == 'symbol':
-            print("return from term", self.next_tag)
+            # print("return from term", self.next_tag)
             return xml
         return self.compile_term(xml, element)
 
     def compile_do(self, xml, element):
-        print("From do", self.next_tag)
+        # print("From do", self.next_tag)
         do = ET.SubElement(element, 'doStatement')
         while True:
-            print("From Do While, self.next_tag",self.next_tag)
+            # print("From Do While, self.next_tag",self.next_tag)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, do)
                 break
@@ -245,7 +243,7 @@ class Compiler:
         return xml
 
     def compile_expression_list(self, xml, element):
-        print("From expression list", self.next_tag)
+        # print("From expression list", self.next_tag)
         if self.next_tag[1] == ')':
             return xml
         xml = self.compile_expression(xml, element)
@@ -262,7 +260,7 @@ class Compiler:
         return xml
 
     def compile_if(self, xml, element):
-        print("From compile if", self.next_tag)
+        # print("From compile if", self.next_tag)
         if_tag = self.current_if_tag
         if self.next_tag[1] == 'if':
             if_tag = ET.SubElement(element, 'ifStatement')
@@ -281,8 +279,8 @@ class Compiler:
                 xml = self.generate_tag(xml, if_tag)
                 statements = ET.SubElement(if_tag, 'statements')
                 self.compile_statements(xml, statements)
-                print("Come back from statments to IF", self.next_tag)
-            print("From While IF statment", self.next_tag)
+                # print("Come back from statments to IF", self.next_tag)
+            # print("From While IF statment", self.next_tag)
 
         # Add }
         xml = self.generate_tag(xml, if_tag)
@@ -296,14 +294,14 @@ class Compiler:
         while True:
             # Add (
             xml = self.generate_tag(xml, while_tag)
-            print("From While to compile expressions", self.next_tag)
+            # print("From While to compile expressions", self.next_tag)
             xml = self.compile_expression(xml, while_tag)
             # Add )
             xml = self.generate_tag(xml, while_tag)
             # ADD {
             xml = self.generate_tag(xml, while_tag)
             statements = ET.SubElement(while_tag, 'statements')
-            print("From While to compile statments", self.next_tag)
+            # print("From While to compile statments", self.next_tag)
             xml = self.compile_statements(xml, statements)
             # ADD }
             xml = self.generate_tag(xml, while_tag)
