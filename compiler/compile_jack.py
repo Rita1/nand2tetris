@@ -1,5 +1,7 @@
 
 import xml.etree.ElementTree as ET
+from typing import Literal, Optional
+from pydantic import BaseModel, ValidationError, validator
 
 class Compiler:
 
@@ -8,6 +10,15 @@ class Compiler:
     subroutine_tags = ('let','do','if','while')
     op_tags = ('+', '-', '*', '/', '&', '|', '<','&lt;','>', '&gt;', '=')
     current_if_tag = ''
+
+    # List of Symbols objects (class and Method)
+    symbol_table = []
+    no_of_field = 0
+    no_of_argument = 0
+    no_of_static = 0
+    no_of_local = 0
+
+
 
     """ Helper function generate xml element and consume one element"""
 
@@ -52,15 +63,70 @@ class Compiler:
 
     def compile_class_var_decl(self, xml):
         if self.next_tag[1] == '}' or self.next_tag[1] in ('constructor', 'function', 'method'):
-            print("Next tag from class var decl end", self.next_tag)
+            # print("Next tag from class var decl end", self.next_tag)
             return xml
         class_var = ET.SubElement(xml, 'classVarDec')
+        # List Of Tags
+        to_symbol_table = []
         while True:
+            to_symbol_table.append(self.next_tag)
             xml = self.generate_tag(xml, class_var)
             if self.next_tag[1] == ';':
+
+                print("test", self.symbol_table)
                 xml = self.generate_tag(xml, class_var)
+                self.create_symbol_table(to_symbol_table)
                 break
         return self.compile_class_var_decl(xml)
+
+    """" Symbolic table
+
+         Consume tag, save symbol table to class symbols list
+         name:x, type:int, kind:field,
+          no:0 """
+
+    class Symbol(BaseModel):
+        name: str
+        type: str
+        kind: Literal['field', 'static', 'argument', 'local']
+        no: int
+
+    def create_symbol_table(self, list_of_tags, kind=''):
+        print("list of tags", list_of_tags)
+        i = 2
+        no = 0
+        if not kind:
+            kind = list_of_tags[0][1]
+        if kind == 'argument':
+            i = 0
+            while len(list_of_tags[i:]) > 0:
+                type = list_of_tags[i][1]
+                name = list_of_tags[i+1][1]
+                no = self.no_of_argument
+                self.no_of_argument += 1
+                symbol = Compiler.Symbol(name=name, type=type, kind=kind, no=no)
+                self.symbol_table.append(symbol)
+                i += 3
+            return
+        type = list_of_tags[1][1]
+        while len(list_of_tags[i:]) > 0:
+            name = list_of_tags[i][1]
+            if kind == 'field':
+                no = self.no_of_field
+                self.no_of_field += 1
+            elif kind == 'var' or kind == 'local':
+                no = self.no_of_local
+                kind = 'local'
+                self.no_of_local += 1
+            elif kind == 'static':
+                no = self.no_of_static
+                self.no_of_static += 1
+            symbol = Compiler.Symbol(name=name, type=type, kind=kind, no=no)
+            self.symbol_table.append(symbol)
+            i +=2
+        # print("symbol table", self.symbol_table)
+        return
+
 
     """ Subroutine compiler """
     def compile_subroutine(self, xml):
@@ -101,9 +167,12 @@ class Compiler:
     def compile_parameter_list(self, xml, element):
         # print("FROM PARAMETER LIST")
         parameter_dec = ET.SubElement(element, 'parameterList')
+        to_symbol_table = []
         while True:
             if self.next_tag[1] == ')':
+                self.create_symbol_table(to_symbol_table, kind="argument")
                 break
+            to_symbol_table.append(self.next_tag)
             xml = self.generate_tag(xml, parameter_dec)
         return xml
 
@@ -154,10 +223,13 @@ class Compiler:
         if self.next_tag[1] in self.subroutine_tags or self.next_tag[1] == '}':
             return xml
         var = ET.SubElement(element, 'varDec')
+        to_symbol_table = []
         while True:
+            to_symbol_table.append(self.next_tag)
             xml = self.generate_tag(xml, var)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, var)
+                self.create_symbol_table(to_symbol_table)
                 break
         return self.compile_var_dec(xml, element)
 

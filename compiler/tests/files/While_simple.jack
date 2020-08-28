@@ -1,0 +1,12 @@
+class Main {
+
+   function void run() {
+      var char key;
+      
+      while (exit) {
+         do moveSquare();
+      }
+      return;
+    }
+   
+}

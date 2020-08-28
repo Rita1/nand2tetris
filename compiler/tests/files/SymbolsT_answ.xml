@@ -1,0 +1,9 @@
+<tokens>
+<keyword> while </keyword>
+<symbol> ( </symbol>
+<identifier> i </identifier>
+<symbol> &lt; </symbol>
+<identifier> length </identifier>
+<symbol> ) </symbol>
+<symbol> { </symbol>
+</tokens>

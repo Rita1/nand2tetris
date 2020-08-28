@@ -69,6 +69,7 @@ class Main():
                     fw.write(xml_str)
             except IOError:
                 print("File or directory is missing")
+            return c
 
     """ 
     Return path's to files or directories
