@@ -73,7 +73,7 @@ class Compiler:
             xml = self.generate_tag(xml, class_var)
             if self.next_tag[1] == ';':
 
-                print("test", self.symbol_table)
+                # print("test", self.symbol_table)
                 xml = self.generate_tag(xml, class_var)
                 self.create_symbol_table(to_symbol_table)
                 break
@@ -92,11 +92,9 @@ class Compiler:
         no: int
 
     def create_symbol_table(self, list_of_tags, kind=''):
-        print("list of tags", list_of_tags)
+        # print("list of tags", list_of_tags)
         i = 2
         no = 0
-        if not kind:
-            kind = list_of_tags[0][1]
         if kind == 'argument':
             i = 0
             while len(list_of_tags[i:]) > 0:
@@ -109,14 +107,15 @@ class Compiler:
                 i += 3
             return
         type = list_of_tags[1][1]
+        if not kind:
+            kind = list_of_tags[0][1]
         while len(list_of_tags[i:]) > 0:
             name = list_of_tags[i][1]
             if kind == 'field':
                 no = self.no_of_field
                 self.no_of_field += 1
-            elif kind == 'var' or kind == 'local':
+            elif kind == 'local':
                 no = self.no_of_local
-                kind = 'local'
                 self.no_of_local += 1
             elif kind == 'static':
                 no = self.no_of_static
@@ -229,7 +228,7 @@ class Compiler:
             xml = self.generate_tag(xml, var)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, var)
-                self.create_symbol_table(to_symbol_table)
+                self.create_symbol_table(to_symbol_table, kind='local')
                 break
         return self.compile_var_dec(xml, element)
 
