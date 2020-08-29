@@ -8,12 +8,15 @@ class Compiler:
 
     tag_generator = ''
     next_tag = ''
+    "VMWriter object"
+    vm = ''
+
     subroutine_tags = ('let','do','if','while')
     op_tags = ('+', '-', '*', '/', '&', '|', '<','&lt;','>', '&gt;', '=')
     current_if_tag = ''
-    "VMWriter object"
-    vm = ''
     current_args = 0
+    current_class_name = ''
+    current_return_value = ''
 
     # List of Symbols objects (class)
     symbol_table = []
@@ -25,6 +28,7 @@ class Compiler:
 
     def __init__(self):
         self.symbol_table = []
+        self.current_class_name = ''
 
     """ Helper function generate xml element and consume one element"""
 
@@ -48,6 +52,7 @@ class Compiler:
 
         # Class Ident
         self.next_tag = next(self.tag_generator)
+        self.current_class_name = self.next_tag[1]
         self.generate_tag(xml, xml)
         # Class symbol
         self.generate_tag(xml, xml)
@@ -152,11 +157,14 @@ class Compiler:
         self.symbol_table_method = []
         self.no_of_argument = 0
         self.no_of_local = 0
-
+        tags_list = []
         subroutine_dec = ET.SubElement(xml, 'subroutineDec')
         # kiti 4 bus subroutine declaration
         for i in range(4):
+            tags_list.append(self.next_tag[1])
             xml = self.generate_tag(xml, subroutine_dec)
+        self.current_return_value = tags_list[1]
+        self.compile_function_vm(tags_list)
         # print("From subroutine call parameter list", self.next_tag)
         xml = self.compile_parameter_list(xml, subroutine_dec)
         # print("After subroutine call parameter list", self.next_tag)
@@ -183,6 +191,13 @@ class Compiler:
         xml = self.generate_tag(xml, s_body)
 
         return self.compile_subroutine(xml)
+
+    def compile_function_vm(self, tags_list):
+
+        print("tag list", tags_list)
+        func_name = self.current_class_name + '.' + tags_list[2]
+        self.vm.write_function(func_name, self.current_args)
+        return
 
     """ Subroutine parameter list """
     def compile_parameter_list(self, xml, element):
@@ -275,12 +290,17 @@ class Compiler:
         if self.next_tag[1] == ',':
             xml = self.generate_tag(xml, element)
         if self.next_tag[1] in self.op_tags:
-            # print("Compile tag and term from expresion of op-tags", self.next_tag)
+            print("Compile tag and term from expresion of op-tags", self.next_tag)
+            op_tag = self.next_tag[1]
             xml = self.generate_tag(xml, expression)
             xml = self.compile_term(xml, expression)
+            self.generate_op_vm(op_tag)
         return self.compile_expression(xml, element)
 
-    """ Gets tag string and returns Term """
+    """ Gets tag string and returns Term 
+        term: integerConstant | stringConstant | keywordConstant | varName | varName [ expression ] | 
+        subroutineCall | ( expression ) | unaryOp term """
+
     def compile_term(self, xml, element):
         # print("From start term", self.next_tag)
         term = ET.SubElement(element, 'term')
@@ -295,6 +315,7 @@ class Compiler:
             # print("From term ( and [", self.next_tag)
             xml = self.generate_tag(xml, term)
             xml = self.compile_expression(xml, term)
+        self.generate_term_vm()
         xml = self.generate_tag(xml, term)
         if self.next_tag[1] == '[':
             xml = self.generate_tag(xml, term)
@@ -316,9 +337,19 @@ class Compiler:
             return xml
             # return self.compile_expression_list(xml, term)
         if self.next_tag[0] == 'symbol':
-            # print("return from term", self.next_tag)
+            print("return from term", self.next_tag)
             return xml
         return self.compile_term(xml, element)
+
+    def generate_term_vm(self):
+        # print(self.next_tag[0])
+        if self.next_tag[0] == 'integerConstant':
+            self.vm.write_push('constant', self.next_tag[1])
+        return
+
+    def generate_op_vm(self, op_tag):
+        self.vm.write_arit(op_tag)
+        return
 
     """ do subroutineCall """
     def compile_do(self, xml, element):
@@ -362,6 +393,7 @@ class Compiler:
     def compile_return(self, xml, element):
         return_tag = ET.SubElement(element, 'returnStatement')
         # Add return
+        self.vm.write_return(self.current_return_value)
         xml = self.generate_tag(xml, return_tag)
         if self.next_tag[1] != ';':
             xml = self.compile_expression(xml, return_tag)
