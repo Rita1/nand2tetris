@@ -1,0 +1,5 @@
+call square.moveUp 0
+call square.moveDown 0
+call square.moveLeft 0
+call square.moveRight 0
+call Sys.wait 1

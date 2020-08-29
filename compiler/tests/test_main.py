@@ -139,3 +139,4 @@ class TestMain(unittest.TestCase):
     def test_compile_array(self):
 
         self.answers('ArrayTest', "/tests/files/ArrayTest/Main.xml", "/tests/files/ArrayTest/Main_answ.xml")
+

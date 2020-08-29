@@ -1,0 +1,4 @@
+call Screen.setColor 1
+call Screen.drawRectangle 1
+call Screen.setColor 1
+call Screen.drawRectangle 1

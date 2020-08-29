@@ -1,0 +1,3 @@
+call Output.printString 4
+call Output.printInt 1
+call Output.println 0

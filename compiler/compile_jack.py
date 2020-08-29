@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as ET
 from typing import Literal, Optional
 from pydantic import BaseModel, ValidationError, validator
+import VMWriter as VM
 
 class Compiler:
 
@@ -10,15 +11,20 @@ class Compiler:
     subroutine_tags = ('let','do','if','while')
     op_tags = ('+', '-', '*', '/', '&', '|', '<','&lt;','>', '&gt;', '=')
     current_if_tag = ''
+    "VMWriter object"
+    vm = ''
+    current_args = 0
 
-    # List of Symbols objects (class and Method)
+    # List of Symbols objects (class)
     symbol_table = []
+    symbol_table_method = []
     no_of_field = 0
     no_of_argument = 0
     no_of_static = 0
     no_of_local = 0
 
-
+    def __init__(self):
+        self.symbol_table = []
 
     """ Helper function generate xml element and consume one element"""
 
@@ -75,7 +81,7 @@ class Compiler:
 
                 # print("test", self.symbol_table)
                 xml = self.generate_tag(xml, class_var)
-                self.create_symbol_table(to_symbol_table)
+                self.create_class_symbol_table(to_symbol_table)
                 break
         return self.compile_class_var_decl(xml)
 
@@ -91,6 +97,7 @@ class Compiler:
         kind: Literal['field', 'static', 'argument', 'local']
         no: int
 
+    """ Method level symbol table method level """
     def create_symbol_table(self, list_of_tags, kind=''):
         # print("list of tags", list_of_tags)
         i = 2
@@ -103,20 +110,30 @@ class Compiler:
                 no = self.no_of_argument
                 self.no_of_argument += 1
                 symbol = Compiler.Symbol(name=name, type=type, kind=kind, no=no)
-                self.symbol_table.append(symbol)
+                self.symbol_table_method.append(symbol)
                 i += 3
             return
         type = list_of_tags[1][1]
-        if not kind:
-            kind = list_of_tags[0][1]
+        while len(list_of_tags[i:]) > 0:
+            name = list_of_tags[i][1]
+            no = self.no_of_local
+            self.no_of_local += 1
+            symbol = Compiler.Symbol(name=name, type=type, kind=kind, no=no)
+            self.symbol_table_method.append(symbol)
+            i +=2
+        # print("symbol table", self.symbol_table)
+        return
+
+    def create_class_symbol_table(self, list_of_tags):
+        i = 2
+        no = 0
+        type = list_of_tags[1][1]
+        kind = list_of_tags[0][1]
         while len(list_of_tags[i:]) > 0:
             name = list_of_tags[i][1]
             if kind == 'field':
                 no = self.no_of_field
                 self.no_of_field += 1
-            elif kind == 'local':
-                no = self.no_of_local
-                self.no_of_local += 1
             elif kind == 'static':
                 no = self.no_of_static
                 self.no_of_static += 1
@@ -126,11 +143,16 @@ class Compiler:
         # print("symbol table", self.symbol_table)
         return
 
-
     """ Subroutine compiler """
     def compile_subroutine(self, xml):
         if self.next_tag[1] == '}':
             return xml
+        print("BEFORE", self.symbol_table_method)
+        # Reset symbol table
+        self.symbol_table_method = []
+        self.no_of_argument = 0
+        self.no_of_local = 0
+
         subroutine_dec = ET.SubElement(xml, 'subroutineDec')
         # kiti 4 bus subroutine declaration
         for i in range(4):
@@ -298,25 +320,42 @@ class Compiler:
             return xml
         return self.compile_term(xml, element)
 
+    """ do subroutineCall """
     def compile_do(self, xml, element):
         # print("From do", self.next_tag)
         do = ET.SubElement(element, 'doStatement')
+        xml = self.generate_tag(xml, do)
+        args_count = 0
+        tag_list = []
         while True:
             # print("From Do While, self.next_tag",self.next_tag)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, do)
+                self.compile_do_vmcode(tag_list)
                 break
             if self.next_tag[1] == '(':
                 xml = self.generate_tag(xml, do)
                 exp_list = ET.SubElement(do, 'expressionList')
                 xml = self.compile_expression_list(xml, exp_list)
+            tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, do)
         return xml
+
+    """ Subroutine Call subroutineName | (className | varName) . subroutineName"""
+    def compile_do_vmcode(self, tag_list):
+        print("tag_list", tag_list)
+        func_name = tag_list[0][1]
+        if tag_list[1][1] == '.':
+            func_name = func_name + tag_list[1][1] + tag_list[2][1]
+        self.vm.write_call(func_name, self.current_args)
+        self.current_args = 0
+        return
 
     def compile_expression_list(self, xml, element):
         # print("From expression list", self.next_tag)
         if self.next_tag[1] == ')':
             return xml
+        self.current_args += 1
         xml = self.compile_expression(xml, element)
         return self.compile_expression_list(xml, element)
 

@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import tokens as T
 import xml_helper as XML_H
 import compile_jack as C
+import VMWriter
 
 PATH = "/tests/files/"
 
@@ -42,7 +43,7 @@ class Main():
         for f in files_to_parse:
 
             # reset server for unit tests
-            self.reset(f[1], f[2])
+            self.reset(f[1], f[2], f[3])
             #
             try:
                 t = T.Tokenizer()
@@ -60,7 +61,11 @@ class Main():
                             return "</tokens>"
                         fw.write(end())
 
+
+                vm = VMWriter.VMWriter()
+                vm.file_to_write = f[3]
                 c = C.Compiler()
+                c.vm = vm
                 # Write compiled code
                 with open(f[1], 'a') as fw:
                     c.tag_generator = XML_H.XMLHelper.read_xml_tags(f[2])
@@ -84,7 +89,7 @@ class Main():
         path = ''
         file_to_open = ''
         # If file:
-        if file_to_parse[-4:] == "jack" or file_to_parse[-3:] == "xml":
+        if file_to_parse[-4:] == "jack" or file_to_parse[-3:] == "xml" or file_to_parse[-2:] == 'vm':
             # 1. Path in testing dir
             path = os.getcwd() + PATH
             file_to_open = os.getcwd() + PATH + file_to_parse
@@ -114,9 +119,12 @@ class Main():
         file_tokens = self.get_file_path(to_tokens)[0]
         to_write = to_parse[:-4] + "xml"
         file_to_write = self.get_file_path(to_write)[0]
+        to_write_vm = to_parse[:-4] + "vm"
+        file_to_write_vm = self.get_file_path(to_write_vm)[0]
         file_list.append(file_to_open)
         file_list.append(file_to_write)
         file_list.append(file_tokens)
+        file_list.append(file_to_write_vm)
         return file_list
 
     """
@@ -124,7 +132,7 @@ class Main():
     """
 
     @staticmethod
-    def reset(file_to_write, file_to_write_tokens):
+    def reset(file_to_write, file_to_write_tokens, file_to_write_vm):
 
         # remove old file
         if os.path.exists(file_to_write):
@@ -132,6 +140,9 @@ class Main():
 
         if os.path.exists(file_to_write_tokens):
             os.remove(file_to_write_tokens)
+
+        if os.path.exists(file_to_write_vm):
+            os.remove(file_to_write_vm)
 
         # Open File to write open tag
         with open(file_to_write_tokens, 'a+') as fw:
