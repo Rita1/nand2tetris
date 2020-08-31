@@ -10,6 +10,7 @@ class VMWriter:
 
     def write_return(self, return_value):
         # print("Found void", return_value)
+        s_to_write = ''
         if return_value == 'void':
             s_to_write = 'pop temp 0' + '\n'
         s_to_write = s_to_write + 'return' + '\n'
@@ -37,5 +38,7 @@ class VMWriter:
             s_to_write = 'add' + '\n'
         if command == '*':
             s_to_write = 'call Math.multiply 2' + '\n'
+        if command == 'neg':
+            s_to_write = 'neg' + '\n'
         with open(self.file_to_write, 'a') as fw:
             fw.write(s_to_write)

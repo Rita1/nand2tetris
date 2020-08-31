@@ -1,0 +1,14 @@
+class Main {
+
+   function void main() {
+      var boolean loop;
+      var int i, sum;
+      
+      let sum = 0;
+      let loop = false;
+      let i = 5;
+      let sum = sum + 1;
+      return;
+   }
+   
+}

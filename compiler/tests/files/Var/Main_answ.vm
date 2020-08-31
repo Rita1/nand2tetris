@@ -1,0 +1,14 @@
+function Main.main 3
+push constant 0
+pop local 2 // sum = 0
+push constant 1
+neg
+pop local 0 // loop = false
+push constant 5
+pop local 1
+push local 2
+push constant 1
+add
+pop local 2
+pop temp 0
+return

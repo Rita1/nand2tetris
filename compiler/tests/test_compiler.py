@@ -88,9 +88,14 @@ class TestMain(unittest.TestCase):
         self.assertEquals(c.symbol_table, answ)
         self.assertEquals(c.symbol_table_method, answ_method)
 
-    def test_seven(self):
+    def test_seven_to_vm(self):
         c = main.Main().main('Seven')
 
         self.answers("/tests/files/Seven/Main.vm", "/tests/files/Seven/Main_answ.vm")
+
+    def test_var_to_vm(self):
+        c = main.Main().main('Var/Main.jack')
+
+        self.answers("/tests/files/Var/Main.vm", "/tests/files/Var/Main_answ.vm")
 
         

@@ -39,6 +39,23 @@ class Compiler:
         self.next_tag = next(self.tag_generator)
         return xml
 
+    """ Get index and scope in symbol table
+        First search in method scope, than in class scope
+        Return scope and index """
+
+    def get_index_by_name(self, tag):
+        no = 0
+        kind = ''
+        for s in self.symbol_table_method:
+            # print("current s", s, s.kind)
+            # Pirmiausia paieskom tarp local lauku
+            if s.kind == 'local':
+                if s.name == tag:
+                    # print(s)
+                    no = s.no
+                    kind = 'local'
+        return (kind, no)
+
     """ Returns Class XML ETree """
 
     def compile_class(self):
@@ -106,7 +123,6 @@ class Compiler:
     def create_symbol_table(self, list_of_tags, kind=''):
         # print("list of tags", list_of_tags)
         i = 2
-        no = 0
         if kind == 'argument':
             i = 0
             while len(list_of_tags[i:]) > 0:
@@ -164,7 +180,7 @@ class Compiler:
             tags_list.append(self.next_tag[1])
             xml = self.generate_tag(xml, subroutine_dec)
         self.current_return_value = tags_list[1]
-        self.compile_function_vm(tags_list)
+
         # print("From subroutine call parameter list", self.next_tag)
         xml = self.compile_parameter_list(xml, subroutine_dec)
         # print("After subroutine call parameter list", self.next_tag)
@@ -181,6 +197,7 @@ class Compiler:
             # print("var decl from subroutine", self.next_tag)
             xml = self.compile_var_dec(xml, s_body)
             # print("return from var decl from subroutine", self.next_tag)
+        self.compile_function_vm(tags_list)
         if self.next_tag[1] != '}':
             statements = ET.SubElement(s_body, 'statements')
             xml = self.compile_statements(xml, statements)
@@ -194,9 +211,12 @@ class Compiler:
 
     def compile_function_vm(self, tags_list):
 
-        print("tag list", tags_list)
         func_name = self.current_class_name + '.' + tags_list[2]
-        self.vm.write_function(func_name, self.current_args)
+        local_var_count = 0
+        for s in self.symbol_table_method:
+            if s.kind == 'local':
+                local_var_count += 1
+        self.vm.write_function(func_name, local_var_count)
         return
 
     """ Subroutine parameter list """
@@ -240,7 +260,9 @@ class Compiler:
     def compile_let(self, xml, element):
         # print("FROM Let")
         let_statement = ET.SubElement(element, 'letStatement')
+        tag_list = []
         while True:
+            tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, let_statement)
             if self.next_tag[1] == '[':
                 xml = self.generate_tag(xml, let_statement)
@@ -250,9 +272,18 @@ class Compiler:
                 xml = self.generate_tag(xml, let_statement)
                 xml = self.compile_expression(xml, let_statement)
                 xml = self.generate_tag(xml, let_statement)
+                self.compile_let_vm(tag_list)
                 return xml
             # print("tag from while let", self.next_tag)
+
         return xml
+
+    def compile_let_vm(self, tag_list):
+        # print("compile_let", tag_list)
+        # print(tag_list[1][1])
+        kind, no = self.get_index_by_name(tag_list[1][1])
+        self.vm.write_pop(kind, no)
+        return
 
     """ Compile var decl """
     def compile_var_dec(self, xml, element):
@@ -345,6 +376,14 @@ class Compiler:
         # print(self.next_tag[0])
         if self.next_tag[0] == 'integerConstant':
             self.vm.write_push('constant', self.next_tag[1])
+        if self.next_tag[1] == 'false':
+            self.vm.write_push('constant', 1)
+            self.vm.write_arit('neg')
+        if self.next_tag[1] == 'true':
+            self.vm.write_push('constant', 1)
+        if self.next_tag[0] == 'identifier':
+            kind, no = self.get_index_by_name(self.next_tag[1])
+            self.vm.write_push(kind, no)
         return
 
     def generate_op_vm(self, op_tag):
@@ -374,7 +413,7 @@ class Compiler:
 
     """ Subroutine Call subroutineName | (className | varName) . subroutineName"""
     def compile_do_vmcode(self, tag_list):
-        print("tag_list", tag_list)
+        # print("tag_list", tag_list)
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
             func_name = func_name + tag_list[1][1] + tag_list[2][1]

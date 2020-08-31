@@ -1,1 +1,4 @@
+function Main.dispose 0
 call Memory.deAlloc 1
+pop temp 0
+return

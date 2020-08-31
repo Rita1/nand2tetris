@@ -1,0 +1,3 @@
+function Main.main 4
+push  0
+pop  0

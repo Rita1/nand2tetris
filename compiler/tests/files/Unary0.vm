@@ -1,1 +1,5 @@
+function Main.run 0
+push  0
 call moveSquare 0
+pop temp 0
+return
