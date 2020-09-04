@@ -1,19 +1,22 @@
 function Square.new 0
-push  0
+push argument 0
 pop  0
-push  0
+push argument 1
 pop  0
-push  0
+push argument 2
 pop  0
 call draw 0
+pop temp 0
 return
 function Square.dispose 0
 call Memory.deAlloc 1
 pop temp 0
+push constant 0
 return
 function Square.draw 0
 push constant 1
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -24,11 +27,13 @@ push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return
 function Square.erase 0
 push constant 1
 neg
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -39,6 +44,7 @@ push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return
 function Square.incSize 0
 push  0
@@ -50,22 +56,26 @@ push  0
 add
 push constant 510
 call erase 0
+pop temp 0
 push  0
 push constant 2
 add
 pop  0
 call draw 0
 pop temp 0
+push constant 0
 return
 function Square.decSize 0
 push  0
 push constant 2
 call erase 0
+pop temp 0
 push  0
 push constant 2
 pop  0
 call draw 0
 pop temp 0
+push constant 0
 return
 function Square.moveUp 0
 push  0
@@ -73,6 +83,7 @@ push constant 1
 push constant 1
 neg
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -85,11 +96,13 @@ push  0
 push  0
 add
 call Screen.drawRectangle 1
+pop temp 0
 push  0
 push constant 2
 pop  0
 push constant 1
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -100,6 +113,7 @@ push constant 1
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return
 function Square.moveDown 0
 push  0
@@ -109,6 +123,7 @@ push constant 254
 push constant 1
 neg
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -118,12 +133,14 @@ push  0
 push constant 1
 add
 call Screen.drawRectangle 1
+pop temp 0
 push  0
 push constant 2
 add
 pop  0
 push constant 1
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -137,6 +154,7 @@ push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return
 function Square.moveLeft 0
 push  0
@@ -144,6 +162,7 @@ push constant 1
 push constant 1
 neg
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 add
@@ -156,11 +175,13 @@ push  0
 push  0
 add
 call Screen.drawRectangle 1
+pop temp 0
 push  0
 push constant 2
 pop  0
 push constant 1
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -171,6 +192,7 @@ push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return
 function Square.moveRight 0
 push  0
@@ -180,6 +202,7 @@ push constant 510
 push constant 1
 neg
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 push  0
@@ -189,12 +212,14 @@ push  0
 push  0
 add
 call Screen.drawRectangle 1
+pop temp 0
 push  0
 push constant 2
 add
 pop  0
 push constant 1
 call Screen.setColor 1
+pop temp 0
 push  0
 push  0
 add
@@ -208,4 +233,5 @@ push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+push constant 0
 return

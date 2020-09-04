@@ -1,0 +1,13 @@
+class Main {
+
+   function void main() {
+      do Main.test(5);
+      return;
+   }
+   
+   function int test(int i) {
+       do Output.printInt(i));
+       return i;
+   }
+   
+}

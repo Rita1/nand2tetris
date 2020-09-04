@@ -53,7 +53,14 @@ class Compiler:
                 if s.name == tag:
                     # print(s)
                     no = s.no
-                    kind = 'local'
+                    kind = s.kind
+            # Tada tarp argument
+            if s.kind == 'argument':
+                if s.name == tag:
+                    # print(s)
+                    no = s.no
+                    kind = s.kind
+        # print("kind, no", kind, no)
         return (kind, no)
 
     """ Returns Class XML ETree """
@@ -168,7 +175,7 @@ class Compiler:
     def compile_subroutine(self, xml):
         if self.next_tag[1] == '}':
             return xml
-        print("BEFORE", self.symbol_table_method)
+        # print("BEFORE", self.symbol_table_method)
         # Reset symbol table
         self.symbol_table_method = []
         self.no_of_argument = 0
@@ -311,17 +318,28 @@ class Compiler:
 
     def compile_expression(self, xml, element):
         # print("From Expression", self.next_tag)
+        symbol_before = False
+        # if self.next_tag[0] == 'symbol' and self.next_tag[1] != ')':
+        #     symbol_before = True
         if self.next_tag[1] == ';' or self.next_tag[1] == ')' or self.next_tag[1] == ']':
             return xml
         if self.next_tag[1] == ',':
+            symbol_before = True
             xml = self.generate_tag(xml, element)
         expression = ET.SubElement(element, 'expression')
         # print("Starting compile term from expresion", self.next_tag)
         xml = self.compile_term(xml, expression) #AAA
         if self.next_tag[1] == ',':
+            symbol_before = True
             xml = self.generate_tag(xml, element)
         if self.next_tag[1] in self.op_tags:
-            print("Compile tag and term from expresion of op-tags", self.next_tag)
+            # print("Compile tag and term from expresion of op-tags", self.next_tag)
+            # print("Symbol before", symbol_before)
+            if symbol_before and self.next_tag[1] == '-':
+                # print("Started compile term from -", self.next_tag)
+                xml = self.compile_term(xml, expression)
+                # print("Come back from term and -", self.next_tag)
+                return self.compile_expression(xml, element)
             op_tag = self.next_tag[1]
             xml = self.generate_tag(xml, expression)
             xml = self.compile_term(xml, expression)
@@ -338,15 +356,24 @@ class Compiler:
         # Check if found urinary symbol
         # print("from compile term", self.next_tag)
         if self.next_tag[1] in ('~', '-'):
-            xml = self.generate_tag(xml, term)
             # print("From term urinary", self.next_tag)
+            if self.next_tag[1] == '-':
+                xml = self.generate_tag(xml, term)
+                return_xml = self.compile_term(xml, term)
+                self.vm.write_arit('neg')
+                return return_xml
+            xml = self.generate_tag(xml, term)
             return self.compile_term(xml, term)
         # kiek tik nori expression
         if self.next_tag[1] == '(':
-            # print("From term ( and [", self.next_tag)
+            # print("From term ( ", self.next_tag)
             xml = self.generate_tag(xml, term)
             xml = self.compile_expression(xml, term)
-        self.generate_term_vm()
+        # print("possible tags", self.next_tag)
+        # sugris tag'as jeigu nerando symboliu lenteleje, reiskia tai funkcija
+        make_function_name_to_call = ''
+        if self.generate_term_vm():
+            make_function_name_to_call = self.next_tag[1]
         xml = self.generate_tag(xml, term)
         if self.next_tag[1] == '[':
             xml = self.generate_tag(xml, term)
@@ -355,36 +382,56 @@ class Compiler:
         if self.next_tag[1] == '.': # ????
             # Add .
             # print("Add dot from term", self.next_tag)
+            make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
             xml = self.generate_tag(xml, term)
             # Add subroutine name
             # print("Add subroutine name", self.next_tag)
+            make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
             xml = self.generate_tag(xml, term)
+
             # Add symbol
             xml = self.generate_tag(xml, term)
             # print("From term urinary dot", self.next_tag)
             exp_list = ET.SubElement(term, 'expressionList')
             xml = self.compile_expression_list(xml, exp_list)
             xml = self.generate_tag(xml, term)
+
+            self.vm.write_call(make_function_name_to_call, self.current_args)
+            # kadangi iskviesta args reikia nunulinti
+            self.current_args = 0
+            # jeigu visada kvieciamas sitas is let, tada i temp segmenta idedamas 0, jeigu ne tai neveiks ir reikia taisyti
+            self.vm.write_push('temp', 0)
             return xml
             # return self.compile_expression_list(xml, term)
         if self.next_tag[0] == 'symbol':
-            print("return from term", self.next_tag)
+            # print("return from term", self.next_tag)
             return xml
         return self.compile_term(xml, element)
 
+    """ null - constant 0
+        false - constant  0
+        true - constant -1 """
+
     def generate_term_vm(self):
-        # print(self.next_tag[0])
+        # print("call term vm", self.next_tag)
         if self.next_tag[0] == 'integerConstant':
             self.vm.write_push('constant', self.next_tag[1])
         if self.next_tag[1] == 'false':
-            self.vm.write_push('constant', 1)
-            self.vm.write_arit('neg')
+            self.vm.write_push('constant', 0)
         if self.next_tag[1] == 'true':
             self.vm.write_push('constant', 1)
+            self.vm.write_arit('neg')
         if self.next_tag[0] == 'identifier':
+            # print("From Term find kind and index", self.next_tag)
             kind, no = self.get_index_by_name(self.next_tag[1])
+            # print("KIND, NO", kind, no)
+            # kartais indentifier neranda, nes kvieciamas klases metodas
+            if not kind:
+                # print("return true", kind)
+                return True
             self.vm.write_push(kind, no)
-        return
+        # print("return false")
+        return False
 
     def generate_op_vm(self, op_tag):
         self.vm.write_arit(op_tag)
@@ -427,16 +474,17 @@ class Compiler:
             return xml
         self.current_args += 1
         xml = self.compile_expression(xml, element)
+        # print("come back from expreesion list", self.next_tag)
         return self.compile_expression_list(xml, element)
 
     def compile_return(self, xml, element):
         return_tag = ET.SubElement(element, 'returnStatement')
-        # Add return
-        self.vm.write_return(self.current_return_value)
         xml = self.generate_tag(xml, return_tag)
         if self.next_tag[1] != ';':
             xml = self.compile_expression(xml, return_tag)
-        # Add ;
+        # Add return
+        self.vm.write_return(self.current_return_value)
+        # Add;
         xml = self.generate_tag(xml, return_tag)
         return xml
 
@@ -467,11 +515,23 @@ class Compiler:
         xml = self.generate_tag(xml, if_tag)
         return xml
 
-    """ While (expresion) (statments) """
+    """ While (expresion) (statments) 
+        VM code:
+        
+        label L1
+        compiled (expresion)
+        not
+        if-goto L2
+        compiled (statments)
+        goto L1
+        label L2
+        """
 
     def compile_while(self, xml, element):
         while_tag = ET.SubElement(element, 'whileStatement')
         xml = self.generate_tag(xml, while_tag)
+        label = self.current_class_name + '.' + self.c
+        self.vm.write_label(label)
         while True:
             # Add (
             xml = self.generate_tag(xml, while_tag)

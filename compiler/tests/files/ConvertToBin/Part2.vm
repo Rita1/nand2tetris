@@ -1,0 +1,35 @@
+function Main.convert 3
+push constant 1
+neg
+pop local 2
+push local 2
+push local 1
+push constant 1
+add
+pop local 1
+push local 0
+call Main.nextMask 1
+pop temp 0
+push temp 0
+pop local 0
+push local 1
+push constant 16
+push argument 0
+push local 0
+push constant 0
+push constant 8000
+push local 1
+add
+push constant 1
+call Memory.poke 1
+pop temp 0
+push constant 8000
+push local 1
+add
+push constant 0
+call Memory.poke 1
+pop temp 0
+push constant 0
+pop local 2
+push constant 0
+return

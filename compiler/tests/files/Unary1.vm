@@ -3,4 +3,5 @@ push  0
 push constant 0
 call moveSquare 0
 pop temp 0
+push constant 0
 return

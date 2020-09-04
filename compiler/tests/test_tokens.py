@@ -317,3 +317,30 @@ class TestTokens(unittest.TestCase):
         for i in range(len(t_list)):
             self.assertEquals(t_list[i], answ[i])
 
+    # def test_tokens_subroutine2(self):
+    #
+    #     Tokens = tokens.Tokenizer
+    #     line = """do Screen.drawRectangle(-y+x);"""
+    #     t_list = Tokens().make_tokens(line)
+    #     line = """do Screen.drawRectangle(x, y, x, -y);"""
+    #     t_list = Tokens().make_tokens(line)
+    #     answ = [Tokens.Token(tokenType='keyword', keyWord='do'),
+    #         Tokens.Token(tokenType='identifier', identifier='Screen'),
+    #         Tokens.Token(tokenType='symbol', symbol='.'),
+    #         Tokens.Token(tokenType='identifier', identifier='drawRectangle'),
+    #         Tokens.Token(tokenType='symbol', symbol='('),
+    #         Tokens.Token(tokenType='identifier', identifier='x'),
+    #         Tokens.Token(tokenType='symbol', symbol=','),
+    #         Tokens.Token(tokenType='identifier', identifier='y'),
+    #         Tokens.Token(tokenType='symbol', symbol=','),
+    #         Tokens.Token(tokenType='identifier', identifier='x'),
+    #         Tokens.Token(tokenType='symbol', symbol=','),
+    #         Tokens.Token(tokenType='identifier', identifier='-y'),
+    #         Tokens.Token(tokenType='symbol', symbol=','),
+    #         Tokens.Token(tokenType='symbol', symbol=')'),
+    #         Tokens.Token(tokenType='symbol', symbol=';')]
+    #     self.assertEqual(len(t_list), 15)
+    #     print("T_LIST ****************************", t_list)
+    #     for i in range(len(t_list)):
+    #         self.assertEquals(t_list[i], answ[i])
+

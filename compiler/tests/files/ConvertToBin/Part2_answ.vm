@@ -1,0 +1,9 @@
+function Main.convert 3
+push constant 1
+neg
+pop local 3
+label Main.convert.while.1
+push local 3
+not
+if-goto 
+return

@@ -1,13 +1,18 @@
 function Main.moveSquare 0
 push  0
 call square.moveUp 0
+pop temp 0
 push  0
 call square.moveDown 0
+pop temp 0
 push  0
 call square.moveLeft 0
+pop temp 0
 push  0
 call square.moveRight 0
+pop temp 0
 push  0
 call Sys.wait 1
 pop temp 0
+push constant 0
 return

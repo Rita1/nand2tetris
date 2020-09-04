@@ -2,4 +2,5 @@ function Main.run 1
 push  0
 call moveSquare 0
 pop temp 0
+push constant 0
 return

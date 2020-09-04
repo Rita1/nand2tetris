@@ -2,8 +2,10 @@ function Main.main 1
 push  0
 pop local 0
 call game.run 0
+pop temp 0
 call game.dispose 0
 pop temp 0
+push constant 0
 return
 function Main.test 4
 push constant 1
@@ -16,13 +18,15 @@ push constant 2
 pop local 3
 push local 0
 push local 1
+neg
 call Math.multiply 2
 pop local 0
 push local 1
 push constant 2
+neg
 pop local 1
 push local 0
 push local 1
 pop local 0
-pop temp 0
+push constant 0
 return

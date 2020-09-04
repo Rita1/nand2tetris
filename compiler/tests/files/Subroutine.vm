@@ -1,9 +1,10 @@
 function Main.new 0
-push  0
+push argument 0
 pop  0
-push  0
+push argument 1
 pop  0
-push  0
+push argument 2
 pop  0
 call draw 0
+pop temp 0
 return

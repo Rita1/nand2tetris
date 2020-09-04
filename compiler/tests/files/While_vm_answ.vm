@@ -1,0 +1,15 @@
+function Main.main 1 // function void main() {
+push constant 1
+neg
+pop local 0 // let loop = true;
+label Main.main.while_1.1 // while (loop) {
+push local 0 // loop
+not
+if-goto Main.main.while_1.2
+push constant 1
+call Output.printInt 1 // do Output.printInt(1);
+pop temp 0
+goto Main.main.while_1.1
+label Main.main.while_1.2
+push constant 0
+return // return

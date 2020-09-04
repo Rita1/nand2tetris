@@ -44,6 +44,7 @@ class Main():
 
             # reset server for unit tests
             self.reset(f[1], f[2], f[3])
+            # print("current f", f)
             #
             try:
                 t = T.Tokenizer()
@@ -74,7 +75,7 @@ class Main():
                     fw.write(xml_str)
             except IOError:
                 print("File or directory is missing")
-            return c
+            # return c
 
     """ 
     Return path's to files or directories

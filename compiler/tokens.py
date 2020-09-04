@@ -85,6 +85,7 @@ class Tokenizer:
                 todo.append(l)
         if "" in todo:
             todo.remove("")
+        # print("Todo before", todo)
         todo = self.split_by_symbol(todo, [])
         if "" in todo:
             todo.remove("")
@@ -113,14 +114,17 @@ class Tokenizer:
 
 
     def symbol_coord(self, line):
+        # print("line", line)
         coord = -1
         find_coord = []
         if line and line[0] == '"':
             return coord
         for s in Tokenizer.Token.get_symbol():
+            # print("s", s)
             coord = line.find(s)
             if coord >= 0:
                 find_coord.append(coord)
+        # print("find_coord", find_coord)
         if find_coord:
             coord = min(find_coord)
         return coord
