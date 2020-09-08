@@ -1,0 +1,15 @@
+class Main {
+
+    function void main() {
+        var boolean loop;
+        let loop = true;
+        if (loop) {
+            do Output.printInt(1);
+        }
+        else {            
+            do Output.printInt(2);
+        }
+        return;
+    }
+    
+}

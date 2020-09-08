@@ -1,0 +1,18 @@
+function Main.main 1 // function void main() {
+push constant 1
+neg
+pop local 0 // let loop = true;
+push local 0 // start if
+not
+if-goto Main.main.if.0.0
+push constant 1
+call Output.printInt 1 // do Output.printInt(1);
+pop temp 0
+goto Main.main.if.0.1
+label Main.main.if.0.0 // else
+push constant 2
+call Output.printInt 1 // do Output.printInt(2);
+pop temp 0
+label Main.main.if.0.1 // return
+push constant 0
+return

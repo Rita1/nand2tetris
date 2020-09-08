@@ -1,9 +1,16 @@
 function Main.run 0
-push  0
-push  0
+label Main.run.while.0.0
+not
+not
+if-goto Main.run.while.0.1
 push constant 0
 push constant 0
 push constant 30
+call Square.new 1
+pop temp 0
+push temp 0
 pop  0
+goto Main.run.while.0.0
+label Main.run.while.0.1
 push constant 0
 return

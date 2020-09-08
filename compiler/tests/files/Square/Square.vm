@@ -15,223 +15,179 @@ push constant 0
 return
 function Square.draw 0
 push constant 1
+neg
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
-push  0
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
 push constant 0
 return
 function Square.erase 0
-push constant 1
-neg
+push constant 0
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
-push  0
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
 push constant 0
 return
 function Square.incSize 0
-push  0
-push  0
 add
 push constant 254
-push  0
-push  0
+lt
 add
 push constant 510
+lt
+
+not
+if-goto Square.incSize.if.0.0
 call erase 0
 pop temp 0
-push  0
 push constant 2
 add
 pop  0
 call draw 0
 pop temp 0
+label Square.incSize.if.0.0
 push constant 0
 return
 function Square.decSize 0
-push  0
 push constant 2
+gt
+not
+if-goto Square.decSize.if.1.0
 call erase 0
 pop temp 0
-push  0
 push constant 2
+sub
 pop  0
 call draw 0
 pop temp 0
+label Square.decSize.if.1.0
 push constant 0
 return
 function Square.moveUp 0
-push  0
 push constant 1
+gt
+not
+if-goto Square.moveUp.if.2.0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+add
+push constant 1
+sub
+add
+add
+call Screen.drawRectangle 1
+pop temp 0
+push constant 2
+sub
+pop  0
 push constant 1
 neg
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
 add
-push constant 1
-push  0
-push  0
-add
-push  0
-push  0
-add
-call Screen.drawRectangle 1
-pop temp 0
-push  0
-push constant 2
-pop  0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push  0
-push  0
-push  0
-push  0
-add
-push  0
 push constant 1
 add
 call Screen.drawRectangle 1
 pop temp 0
+label Square.moveUp.if.2.0
 push constant 0
 return
 function Square.moveDown 0
-push  0
-push  0
 add
 push constant 254
-push constant 1
-neg
+lt
+not
+if-goto Square.moveDown.if.3.0
+push constant 0
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
-push  0
 add
-push  0
 push constant 1
 add
 call Screen.drawRectangle 1
 pop temp 0
-push  0
 push constant 2
 add
 pop  0
 push constant 1
+neg
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
 add
 push constant 1
-push  0
-push  0
+sub
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+label Square.moveDown.if.3.0
 push constant 0
 return
 function Square.moveLeft 0
-push  0
 push constant 1
+gt
+not
+if-goto Square.moveLeft.if.4.0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+add
+push constant 1
+sub
+add
+add
+call Screen.drawRectangle 1
+pop temp 0
+push constant 2
+sub
+pop  0
 push constant 1
 neg
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-add
 push constant 1
-push  0
-push  0
-push  0
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
-push  0
-push constant 2
-pop  0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push  0
-push  0
-push  0
-push constant 1
-add
-push  0
-push  0
-add
-call Screen.drawRectangle 1
-pop temp 0
+label Square.moveLeft.if.4.0
 push constant 0
 return
 function Square.moveRight 0
-push  0
-push  0
 add
 push constant 510
-push constant 1
-neg
+lt
+not
+if-goto Square.moveRight.if.5.0
+push constant 0
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
-push  0
 push constant 1
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
-push  0
 push constant 2
 add
 pop  0
 push constant 1
+neg
 call Screen.setColor 1
 pop temp 0
-push  0
-push  0
 add
 push constant 1
-push  0
-push  0
-push  0
+sub
 add
-push  0
-push  0
 add
 call Screen.drawRectangle 1
 pop temp 0
+label Square.moveRight.if.5.0
 push constant 0
 return

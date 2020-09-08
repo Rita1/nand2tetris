@@ -6,7 +6,11 @@ class Main {
    }
    
    function int test(int i) {
+   
+       var int position;
+       
        do Output.printInt(i));
+       do Memory.poke(8000 + position, 1);
        return i;
    }
    

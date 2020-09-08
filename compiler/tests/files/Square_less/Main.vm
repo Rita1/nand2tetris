@@ -9,6 +9,8 @@ push constant 0
 return
 function Main.test 4
 push local 0
+not
+if-goto Main.test.if.0.0
 push local 0
 pop local 2
 push local 1
@@ -16,12 +18,16 @@ pop local 2
 push local 0
 push local 1
 pop local 3
+goto Main.test.if.0.1
+label Main.test.if.0.0
 push local 0
 pop local 0
 push local 1
 pop local 1
 push local 0
 push local 1
+
 pop local 0
+label Main.test.if.0.1
 push constant 0
 return

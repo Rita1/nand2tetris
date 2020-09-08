@@ -4,9 +4,15 @@ call Main.test 1
 pop temp 0
 push constant 0
 return
-function Main.test 0
+function Main.test 1
 push argument 0
 call Output.printInt 1
+pop temp 0
+push constant 8000
+push local 0
+add
+push constant 1
+call Memory.poke 2
 pop temp 0
 push argument 0
 return

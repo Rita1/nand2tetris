@@ -2,14 +2,12 @@ function Main.main 1 // function void main() {
 push constant 1
 neg
 pop local 0 // let loop = true;
-label Main.main.while.0.0 // while (loop) {
-push local 0 // loop
+push local 0 // start if
 not
-if-goto Main.main.while.0.1
+if-goto Main.main.if.0.0
 push constant 1
 call Output.printInt 1 // do Output.printInt(1);
 pop temp 0
-goto Main.main.while.0.0
-label Main.main.while.0.1
+label Main.main.if.0.0 // return
 push constant 0
-return // return
+return

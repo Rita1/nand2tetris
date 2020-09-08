@@ -17,6 +17,8 @@ class Compiler:
     current_args = 0
     current_class_name = ''
     current_return_value = ''
+    current_func_name = ''
+    current_id = 0
 
     # List of Symbols objects (class)
     symbol_table = []
@@ -219,6 +221,7 @@ class Compiler:
     def compile_function_vm(self, tags_list):
 
         func_name = self.current_class_name + '.' + tags_list[2]
+        self.current_func_name = func_name
         local_var_count = 0
         for s in self.symbol_table_method:
             if s.kind == 'local':
@@ -239,11 +242,22 @@ class Compiler:
             xml = self.generate_tag(xml, parameter_dec)
         return xml
 
+    def get_label(self, ):
+
+        label = self.current_func_name + '.if.' + str(self.current_id - 1)
+        label_0 = label + '.0'
+        label_1 = label + '.1'
+
+        return label_0, label_1
+
     """ Compile statments """
 
     def compile_statements(self, xml, element):
         # print("From statments")
         #OOO if_tag = ''
+
+
+
         if self.next_tag[1] == '}' or self.next_tag[1] == ';':
             return xml
         if self.next_tag[1] == 'let':
@@ -252,11 +266,29 @@ class Compiler:
             xml = self.compile_do(xml, element)
         if self.next_tag[1] == 'return':
             xml = self.compile_return(xml, element)
+
+        label_0 = ''
+        label_1 = ''
+
         if self.next_tag[1] == 'if':
             #OOO xml, if_tag = self.compile_if(xml, element)
             xml = self.compile_if(xml, element)
+
+            label_0 = self.get_label()[0]
+            label_1 = self.get_label()[1]
+
         if self.next_tag[1] == 'else':
-            xml = self.compile_if(xml, element)
+
+            self.vm.write_goto(label_1)
+            self.vm.write_label(label_0)
+            xml = self.compile_if(xml, element, else_st=True)
+
+            self.vm.write_label(label_1)
+
+        else:
+            if label_0:
+                self.vm.write_label(label_0)
+
         if self.next_tag[1] == 'while':
             xml = self.compile_while(xml, element)
         # self.next_tag = next(self.tag_generator)
@@ -319,8 +351,6 @@ class Compiler:
     def compile_expression(self, xml, element):
         # print("From Expression", self.next_tag)
         symbol_before = False
-        # if self.next_tag[0] == 'symbol' and self.next_tag[1] != ')':
-        #     symbol_before = True
         if self.next_tag[1] == ';' or self.next_tag[1] == ')' or self.next_tag[1] == ']':
             return xml
         if self.next_tag[1] == ',':
@@ -356,14 +386,20 @@ class Compiler:
         # Check if found urinary symbol
         # print("from compile term", self.next_tag)
         if self.next_tag[1] in ('~', '-'):
-            # print("From term urinary", self.next_tag)
+            # xml = self.generate_tag(xml, term)
+            # return_xml = self.compile_term(xml, term)
+            print("From term urinary", self.next_tag)
             if self.next_tag[1] == '-':
                 xml = self.generate_tag(xml, term)
                 return_xml = self.compile_term(xml, term)
                 self.vm.write_arit('neg')
                 return return_xml
-            xml = self.generate_tag(xml, term)
-            return self.compile_term(xml, term)
+            if self.next_tag[1] == '~':
+                xml = self.generate_tag(xml, term)
+                return_xml = self.compile_term(xml, term)
+                print("WRITE ~")
+                self.vm.write_arit('not')
+                return return_xml
         # kiek tik nori expression
         if self.next_tag[1] == '(':
             # print("From term ( ", self.next_tag)
@@ -464,17 +500,18 @@ class Compiler:
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
             func_name = func_name + tag_list[1][1] + tag_list[2][1]
+        print("self.current_args from do", self.current_args)
         self.vm.write_call(func_name, self.current_args)
         self.current_args = 0
         return
 
     def compile_expression_list(self, xml, element):
-        # print("From expression list", self.next_tag)
+        print("From expression list", self.next_tag)
         if self.next_tag[1] == ')':
             return xml
         self.current_args += 1
         xml = self.compile_expression(xml, element)
-        # print("come back from expreesion list", self.next_tag)
+        print("come back from expreesion list", self.next_tag, self.current_args)
         return self.compile_expression_list(xml, element)
 
     def compile_return(self, xml, element):
@@ -488,12 +525,40 @@ class Compiler:
         xml = self.generate_tag(xml, return_tag)
         return xml
 
-    def compile_if(self, xml, element):
+    """ if(expression)
+            statments1
+        else
+            statments2 
+            
+        VM code:
+        
+        compiled(expresion)
+        not
+        if-goto L0
+        compiled (statments1)
+        goto L1
+        label L0
+        compiled (statments2)
+        label L1 """
+
+    # exp
+    # not
+    # if -goto L0
+    # comp stm1
+    # L0
+
+    def compile_if(self, xml, element, else_st = False):
         # print("From compile if", self.next_tag)
         if_tag = self.current_if_tag
         if self.next_tag[1] == 'if':
             if_tag = ET.SubElement(element, 'ifStatement')
             self.current_if_tag = if_tag
+
+        label_0 = ''
+        if not else_st:
+            self.current_id += 1
+            label_0, _ = self.get_label()
+
         while True:
             if self.next_tag[1] == '}':
                 break
@@ -501,6 +566,9 @@ class Compiler:
             if self.next_tag[1] == '(':
                 xml = self.generate_tag(xml, if_tag)
                 self.compile_expression(xml, if_tag)
+
+                self.vm.write_arit('not')
+                self.vm.write_if_goto(label_0)
                 # Add )
                 xml = self.generate_tag(xml, if_tag)
             if self.next_tag[1] == '{':
@@ -508,9 +576,9 @@ class Compiler:
                 xml = self.generate_tag(xml, if_tag)
                 statements = ET.SubElement(if_tag, 'statements')
                 self.compile_statements(xml, statements)
+
                 # print("Come back from statments to IF", self.next_tag)
             # print("From While IF statment", self.next_tag)
-
         # Add }
         xml = self.generate_tag(xml, if_tag)
         return xml
@@ -530,20 +598,30 @@ class Compiler:
     def compile_while(self, xml, element):
         while_tag = ET.SubElement(element, 'whileStatement')
         xml = self.generate_tag(xml, while_tag)
-        label = self.current_class_name + '.' + self.c
-        self.vm.write_label(label)
+        label = self.current_func_name + '.while.' + str(self.current_id)
+        self.current_id += 1
+        label_0 = label + '.0'
+        label_1 = label + '.1'
+        self.vm.write_label(label_0)
         while True:
             # Add (
             xml = self.generate_tag(xml, while_tag)
             # print("From While to compile expressions", self.next_tag)
             xml = self.compile_expression(xml, while_tag)
             # Add )
+
+            self.vm.write_arit('not')
+            self.current_func_name + '.while.' + str(self.current_id) + '.1'
+            self.vm.write_if_goto(label_1)
+
             xml = self.generate_tag(xml, while_tag)
             # ADD {
             xml = self.generate_tag(xml, while_tag)
             statements = ET.SubElement(while_tag, 'statements')
             # print("From While to compile statments", self.next_tag)
             xml = self.compile_statements(xml, statements)
+            self.vm.write_goto(label_0)
+            self.vm.write_label(label_1)
             # ADD }
             xml = self.generate_tag(xml, while_tag)
             break

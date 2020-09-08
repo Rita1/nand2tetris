@@ -2,7 +2,10 @@ function Main.convert 3
 push constant 1
 neg
 pop local 2
+label Main.convert.while.0.0
 push local 2
+not
+if-goto Main.convert.while.0.1
 push local 1
 push constant 1
 add
@@ -14,22 +17,39 @@ push temp 0
 pop local 0
 push local 1
 push constant 16
+gt
+not
+not
+if-goto Main.convert.if.1.0
 push argument 0
 push local 0
+and
 push constant 0
+eq
+not
+not
+if-goto Main.convert.if.2.0
 push constant 8000
 push local 1
 add
 push constant 1
 call Memory.poke 1
 pop temp 0
+goto Main.convert.if.2.1
+label Main.convert.if.2.0
 push constant 8000
 push local 1
 add
 push constant 0
 call Memory.poke 1
 pop temp 0
+label Main.convert.if.2.1
+goto Main.convert.if.2.1
+label Main.convert.if.2.0
 push constant 0
 pop local 2
+label Main.convert.if.2.1
+goto Main.convert.while.0.0
+label Main.convert.while.0.1
 push constant 0
 return

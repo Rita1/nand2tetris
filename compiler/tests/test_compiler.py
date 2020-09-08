@@ -117,7 +117,17 @@ class TestMain(unittest.TestCase):
 
         self.answers("/tests/files/While_vm.vm", "/tests/files/While_vm_answ.vm")
 
+    def test_if_to_vm(self):
+        c = main.Main().main('If_vm1.jack')
+
+        # self.answers("/tests/files/If_vm1.vm", "/tests/files/If_vm1_answ.vm")
+
+        c = main.Main().main('If_vm.jack')
+        self.answers("/tests/files/If_vm.vm", "/tests/files/If_vm_answ.vm")
+
     def test_binary_to_vm(self):
         c = main.Main().main('ConvertToBin')
         self.answers("/tests/files/ConvertToBin/Part1.vm", "/tests/files/ConvertToBin/Part1_answ.vm")
+        self.answers("/tests/files/ConvertToBin/Part2.vm", "/tests/files/ConvertToBin/Part2_answ.vm")
+
         # self.answers("/tests/files/ConvertToBin/Main.vm", "/tests/files/ConvertToBin/Main_answ.vm")

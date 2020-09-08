@@ -2,14 +2,17 @@ function Main.main 1
 push constant 1
 neg
 pop local 0
-label Main.main.while.0.0
 push local 0
 not
-if-goto Main.main.while.0.1
+if-goto Main.main.if.0.0
 push constant 1
 call Output.printInt 1
 pop temp 0
-goto Main.main.while.0.0
-label Main.main.while.0.1
+goto Main.main.if.0.1
+label Main.main.if.0.0
+push constant 2
+call Output.printInt 1
+pop temp 0
+label Main.main.if.0.1
 push constant 0
 return
