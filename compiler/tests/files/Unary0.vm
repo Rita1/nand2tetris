@@ -1,8 +1,11 @@
 function Main.run 0
 label Main.run.while.0.0
 not
+not
 if-goto Main.run.while.0.1
-push constant 0
-return
+call moveSquare 0
+pop temp 0
 goto Main.run.while.0.0
 label Main.run.while.0.1
+push constant 0
+return

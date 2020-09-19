@@ -20,7 +20,7 @@ call Screen.setColor 1
 pop temp 0
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 push constant 0
 return
@@ -30,7 +30,7 @@ call Screen.setColor 1
 pop temp 0
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 push constant 0
 return
@@ -41,7 +41,7 @@ lt
 add
 push constant 510
 lt
-
+and
 not
 if-goto Square.incSize.if.0.0
 call erase 0
@@ -82,7 +82,7 @@ push constant 1
 sub
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 3
 pop temp 0
 push constant 2
 sub
@@ -94,7 +94,7 @@ pop temp 0
 add
 push constant 1
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 label Square.moveUp.if.2.0
 push constant 0
@@ -111,7 +111,7 @@ pop temp 0
 add
 push constant 1
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 push constant 2
 add
@@ -125,7 +125,7 @@ push constant 1
 sub
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 3
 pop temp 0
 label Square.moveDown.if.3.0
 push constant 0
@@ -143,7 +143,7 @@ push constant 1
 sub
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 3
 pop temp 0
 push constant 2
 sub
@@ -155,7 +155,7 @@ pop temp 0
 push constant 1
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 label Square.moveLeft.if.4.0
 push constant 0
@@ -172,7 +172,7 @@ pop temp 0
 push constant 1
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 2
 pop temp 0
 push constant 2
 add
@@ -186,7 +186,7 @@ push constant 1
 sub
 add
 add
-call Screen.drawRectangle 1
+call Screen.drawRectangle 3
 pop temp 0
 label Square.moveRight.if.5.0
 push constant 0

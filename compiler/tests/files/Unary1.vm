@@ -1,7 +1,7 @@
 function Main.run 0
 label Main.run.while.0.0
 push constant 0
-
+eq
 not
 not
 if-goto Main.run.while.0.1

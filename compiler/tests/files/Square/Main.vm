@@ -23,12 +23,14 @@ goto Main.test.if.0.1
 label Main.test.if.0.0
 push local 0
 push local 1
-push local 1
+neg
 call Math.multiply 2
+pop local 0
 push local 1
 push constant 2
-push local 0
+neg
 
+pop local 1
 push local 0
 push local 1
 

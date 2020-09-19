@@ -12,7 +12,7 @@ push constant 8000
 push local 0
 add
 push constant 1
-call Memory.poke 1
+call Memory.poke 2
 pop temp 0
 push argument 0
 return

@@ -83,3 +83,16 @@ class VMWriter:
         s_to_write = 'goto ' + label + '\n'
         with open(self.file_to_write, 'a') as fw:
             fw.write(s_to_write)
+
+
+# Methods are called using
+#     method(...), or
+#     variable.method(...)
+# The first version calls method passing the current object. Think this.method(...), except that Jack doesn't allow access to the this variable.
+#
+# Functions and constructors are called using
+#     ClassName.function(...)
+#
+# So, if it doesn't have a ".", this is a method call.
+# If it has a ".", you need to see if the symbol on the left is a variable. If it is, this is a method call.
+# Otherwise, this is function (or constructor) call.

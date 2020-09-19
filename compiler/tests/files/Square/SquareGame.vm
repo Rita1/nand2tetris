@@ -18,28 +18,28 @@ push constant 0
 return
 function SquareGame.moveSquare 0
 push constant 1
-
+eq
 not
 if-goto SquareGame.moveSquare.if.0.0
 call square.moveUp 0
 pop temp 0
 label SquareGame.moveSquare.if.0.0
 push constant 2
-
+eq
 not
 if-goto SquareGame.moveSquare.if.1.0
 call square.moveDown 0
 pop temp 0
 label SquareGame.moveSquare.if.1.0
 push constant 3
-
+eq
 not
 if-goto SquareGame.moveSquare.if.2.0
 call square.moveLeft 0
 pop temp 0
 label SquareGame.moveSquare.if.2.0
 push constant 4
-
+eq
 not
 if-goto SquareGame.moveSquare.if.3.0
 call square.moveRight 0
@@ -55,13 +55,96 @@ push constant 0
 pop local 1
 label SquareGame.run.while.4.0
 push local 1
+not
+not
+if-goto SquareGame.run.while.4.1
+label SquareGame.run.while.5.0
 push local 0
 push constant 0
-
-push local 0
+eq
+not
+if-goto SquareGame.run.while.5.1
 call Keyboard.keyPressed 0
 pop temp 0
 push temp 0
-
+pop local 0
+call moveSquare 0
+pop temp 0
+goto SquareGame.run.while.5.0
+label SquareGame.run.while.5.1
+push local 0
+push constant 81
+eq
 not
-if-goto SquareGame.run.while.4.1
+if-goto SquareGame.run.if.6.0
+push constant 1
+neg
+pop local 1
+label SquareGame.run.if.6.0
+push local 0
+push constant 90
+eq
+not
+if-goto SquareGame.run.if.7.0
+call square.decSize 0
+pop temp 0
+label SquareGame.run.if.7.0
+push local 0
+push constant 88
+eq
+not
+if-goto SquareGame.run.if.8.0
+call square.incSize 0
+pop temp 0
+label SquareGame.run.if.8.0
+push local 0
+push constant 131
+eq
+not
+if-goto SquareGame.run.if.9.0
+push constant 1
+pop  0
+label SquareGame.run.if.9.0
+push local 0
+push constant 133
+eq
+not
+if-goto SquareGame.run.if.10.0
+push constant 2
+pop  0
+label SquareGame.run.if.10.0
+push local 0
+push constant 130
+eq
+not
+if-goto SquareGame.run.if.11.0
+push constant 3
+pop  0
+label SquareGame.run.if.11.0
+push local 0
+push constant 132
+eq
+not
+if-goto SquareGame.run.if.12.0
+push constant 4
+pop  0
+label SquareGame.run.if.12.0
+label SquareGame.run.while.13.0
+push local 0
+push constant 0
+eq
+not
+not
+if-goto SquareGame.run.while.13.1
+call Keyboard.keyPressed 0
+pop temp 0
+push temp 0
+pop local 0
+call moveSquare 0
+pop temp 0
+goto SquareGame.run.while.13.0
+label SquareGame.run.while.13.1
+goto SquareGame.run.while.4.0
+label SquareGame.run.while.4.1
+push constant 0
+return
