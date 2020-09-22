@@ -8,7 +8,8 @@ not
 if-goto Main.run.while.1.1
 push local 0
 pop local 0
-call moveSquare 0
+push pointer 0
+call Main.moveSquare 1
 pop temp 0
 goto Main.run.while.1.0
 label Main.run.while.1.1
@@ -18,7 +19,8 @@ not
 if-goto Main.run.while.2.1
 push local 0
 pop local 0
-call moveSquare 0
+push pointer 0
+call Main.moveSquare 1
 pop temp 0
 goto Main.run.while.2.0
 label Main.run.while.2.1

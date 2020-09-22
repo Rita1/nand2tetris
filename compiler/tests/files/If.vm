@@ -1,7 +1,10 @@
 function Main.incSize 0
+push argument 0
+pop pointer 0
 not
 if-goto Main.incSize.if.0.0
-call erase 0
+push pointer 0
+call Main.erase 1
 pop temp 0
 label Main.incSize.if.0.0
 push constant 0

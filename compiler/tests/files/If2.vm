@@ -1,4 +1,6 @@
 function Main.moveSquare 0
+push argument 0
+pop pointer 0
 not
 if-goto Main.moveSquare.if.0.0
 call square.moveUp 0

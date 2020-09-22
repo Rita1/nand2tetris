@@ -3,7 +3,8 @@ label Main.run.while.0.0
 not
 not
 if-goto Main.run.while.0.1
-call moveSquare 0
+push pointer 0
+call Main.moveSquare 1
 pop temp 0
 goto Main.run.while.0.0
 label Main.run.while.0.1

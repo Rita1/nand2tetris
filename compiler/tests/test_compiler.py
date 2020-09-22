@@ -132,7 +132,15 @@ class TestMain(unittest.TestCase):
         self.answers("/tests/files/ConvertToBin/Main.vm", "/tests/files/ConvertToBin/Main_answ.vm")
 
     def test_object_vm(self):
-        c = main.Main().main('Object')
+        c1 = main.Main().main('Object')
+        c2 = main.Main().main('Object2')
 
-        # self.answers("/tests/files/Object/Main.vm", "/tests/files/Object/Main_answ.vm")
+        self.answers("/tests/files/Object/Main.vm", "/tests/files/Object/Main_answ.vm")
         self.answers("/tests/files/Object/Square.vm", "/tests/files/Object/Square_answ.vm")
+        self.answers("/tests/files/Object2/Main.vm", "/tests/files/Object2/Main_answ.vm")
+        self.answers("/tests/files/Object2/Main.vm", "/tests/files/Object2/Main_answ.vm")
+
+    def test_array_vm(self):
+        c1 = main.Main().main('Average')
+
+        self.answers("/tests/files/Average/Main.vm", "/tests/files/Average/Main_answ.vm")

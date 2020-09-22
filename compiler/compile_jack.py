@@ -41,35 +41,7 @@ class Compiler:
         self.next_tag = next(self.tag_generator)
         return xml
 
-    """ Get index and scope in symbol table
-        First search in method scope, than in class scope
-        Return scope and index """
 
-    def get_index_by_name(self, tag):
-        no = 0
-        kind = ''
-        for s in self.symbol_table_method:
-            # print("current s", s, s.kind)
-            # Pirmiausia paieskom tarp local lauku
-            if s.kind == 'local':
-                if s.name == tag:
-                    # print(s)
-                    no = s.no
-                    kind = s.kind
-            # Tada tarp argument
-            if s.kind == 'argument':
-                if s.name == tag:
-                    # print(s)
-                    no = s.no
-                    kind = s.kind
-        if not kind:
-            for s in self.symbol_table:
-                if s.name == tag:
-                    no = s.no
-                    if s.kind == 'field':
-                        kind = 'this'
-        # print("kind, no", kind, no)
-        return (kind, no)
 
     """ Returns Class XML ETree """
 
@@ -179,6 +151,54 @@ class Compiler:
         # print("symbol table", self.symbol_table)
         return
 
+    """ Get index and scope in symbol table
+        First search in method scope, than in class scope
+        Return scope and index """
+
+    def get_index_by_name(self, tag):
+        no = 0
+        kind = ''
+        for s in self.symbol_table_method:
+            # print("current s", s, s.kind)
+            # Pirmiausia paieskom tarp local lauku
+            if s.kind == 'local':
+                if s.name == tag:
+                    # print(s)
+                    no = s.no
+                    kind = s.kind
+            # Tada tarp argument
+            if s.kind == 'argument':
+                if s.name == tag:
+                    # print(s)
+                    no = s.no
+                    kind = s.kind
+        if not kind:
+            for s in self.symbol_table:
+                if s.name == tag:
+                    no = s.no
+                    if s.kind == 'field':
+                        kind = 'this'
+        # print("kind, no", kind, no)
+        return (kind, no)
+
+    def get_type_by_name(self, tag):
+        type = ''
+        for s in self.symbol_table_method:
+            # print("current s", s, s.kind)
+            # Pirmiausia paieskom tarp local lauku
+            if s.kind == 'local':
+                if s.name == tag:
+                    type = s.type
+            # Tada tarp argument
+            if s.kind == 'argument':
+                if s.name == tag:
+                    type = s.type
+        if not type:
+            for s in self.symbol_table:
+                if s.name == tag:
+                    type = s.type
+        return type
+
     """ Subroutine compiler """
     def compile_subroutine(self, xml):
         if self.next_tag[1] == '}':
@@ -195,6 +215,7 @@ class Compiler:
             tags_list.append(self.next_tag[1])
             xml = self.generate_tag(xml, subroutine_dec)
         self.current_return_value = tags_list[1]
+
         # print("From subroutine call parameter list", self.next_tag)
         xml = self.compile_parameter_list(xml, subroutine_dec)
         # print("After subroutine call parameter list", self.next_tag)
@@ -212,6 +233,11 @@ class Compiler:
             xml = self.compile_var_dec(xml, s_body)
             # print("return from var decl from subroutine", self.next_tag)
         self.compile_function_vm(tags_list)
+        if tags_list[0] == 'method':
+            # Jeigu methodas, pirmas perduotas argumentas bus pointeris, kuri reikia issisaugoti
+            self.vm.write_push('argument', 0)
+            self.vm.write_pop('pointer', 0)
+
         # print("Tag list", tags_list)
         if tags_list[0] == 'constructor':
             # print("Found object")
@@ -339,6 +365,14 @@ class Compiler:
 
         return xml
 
+    """ Array access let arr[expression1] = expression2
+    push arr
+    push expression1
+    add
+    pop pointer 1
+    push expression2
+    pop that 0 """
+
     def compile_let_vm(self, tag_list):
         # print("compile_let", tag_list)
         # print(tag_list[1][1])
@@ -440,6 +474,8 @@ class Compiler:
             kind, _ = self.get_index_by_name(self.next_tag[1])
             if not kind:
                 tag_list.append(self.next_tag)
+            # Bus metodas jeigu nera tasko arba jeigu indetifier bus field symboliu lentelej
+
         self.generate_term_vm()
 
         xml = self.generate_tag(xml, term)
@@ -465,7 +501,7 @@ class Compiler:
             exp_list = ET.SubElement(term, 'expressionList')
             xml = self.compile_expression_list(xml, exp_list)
             xml = self.generate_tag(xml, term)
-            print("Start write call from term", self.next_tag)
+            # print("Start write call from term", self.next_tag)
             self.compile_call_vmcode(tag_list)
             # self.vm.write_call(make_function_name_to_call, self.current_args)
             # kadangi iskviesta args reikia nunulinti
@@ -485,7 +521,7 @@ class Compiler:
         true - constant -1 """
 
     def generate_term_vm(self):
-        print("generate term vm", self.next_tag)
+        # print("generate term vm", self.next_tag)
         if self.next_tag[0] == 'integerConstant':
             self.vm.write_push('constant', self.next_tag[1])
         if self.next_tag[1] == 'false':
@@ -493,6 +529,18 @@ class Compiler:
         if self.next_tag[1] == 'true':
             self.vm.write_push('constant', 1)
             self.vm.write_arit('neg')
+        # push constatnt stringlen + 1
+        # call String.new 1
+        # push constant ascii value
+        # call String.appendChar 2
+        if self.next_tag[0] == 'stringConstant':
+            str_len = len(self.next_tag[1])
+            self.vm.write_push('constant', str_len)
+            self.vm.write_call('String.new', 1)
+            for char in self.next_tag[1]:
+                self.vm.write_push('constant', ord(char))
+                self.vm.write_call('String.appendChar', 2)
+                # print(char)
         if self.next_tag[0] == 'identifier':
             # print("From Term find kind and index", self.next_tag)
             kind, no = self.get_index_by_name(self.next_tag[1])
@@ -510,8 +558,8 @@ class Compiler:
         # print("From do", self.next_tag)
         do = ET.SubElement(element, 'doStatement')
         xml = self.generate_tag(xml, do)
-        args_count = 0
         tag_list = []
+        found_dot = False
         while True:
             # print("From Do While, self.next_tag",self.next_tag)
             if self.next_tag[1] == ';':
@@ -519,9 +567,24 @@ class Compiler:
                 self.compile_call_vmcode(tag_list)
                 break
             if self.next_tag[1] == '(':
+                if not found_dot:
+                    # tikriausiai 0 ? kadangi pushinam pointeri nes radom metoda +1 prie argumentu
+                    self.vm.write_push('pointer', 0)
+                    self.current_args += 1
+                # a) var.draw() - var bus field symboliu lenteleje
+                if found_dot:
+                    kind, no = self.get_index_by_name(tag_list[0][1])
+                    if kind:
+                        self.vm.write_push(kind, no)
+                        self.current_args += 1
                 xml = self.generate_tag(xml, do)
                 exp_list = ET.SubElement(do, 'expressionList')
                 xml = self.compile_expression_list(xml, exp_list)
+            # reikia patikrinti ar metodas, jeigu metodas push;int pointeri
+            # a) var.draw() - var bus field symboliu lenteleje
+            # b) be taskiuko, tai bus klases metodas
+            if self.next_tag[1] == '.':
+                found_dot = True
             tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, do)
         return xml
@@ -531,7 +594,13 @@ class Compiler:
         # print("tag_list", tag_list)
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
-            func_name = func_name + tag_list[1][1] + tag_list[2][1]
+            # kartais gali buti kad gautas tagas yra varName, tada jo reikia paieskoti
+            kind, no = self.get_index_by_name(tag_list[0][1])
+            if kind:
+                type = self.get_type_by_name(tag_list[0][1])
+                func_name = type + '.' + tag_list[2][1]
+            else:
+                func_name = func_name + tag_list[1][1] + tag_list[2][1]
         else:
             func_name = self.current_class_name + '.' + tag_list[0][1]
         # print("self.current_args from do", self.current_args)
@@ -555,6 +624,11 @@ class Compiler:
         xml = self.generate_tag(xml, return_tag)
         if self.next_tag[1] != ';':
             xml = self.compile_expression(xml, return_tag)
+        # print("current return value", self.current_return_value)
+        # Todo veikia tik klasei ir void
+        # jeigu return value lygi klasei, tai bus objekto konstruktorius ir reikia sugrazinti pointeri
+        if self.current_return_value == self.current_class_name:
+            self.vm.write_push('pointer', 0)
         # Add return
         self.vm.write_return(self.current_return_value)
         # Add;

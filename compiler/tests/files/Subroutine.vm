@@ -10,6 +10,7 @@ push argument 1
 pop this 1
 push argument 2
 pop  0
-call draw 0
+push pointer 0
+call Main.draw 1
 pop temp 0
 return
