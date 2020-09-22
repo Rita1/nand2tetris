@@ -1,14 +1,14 @@
 function Main.draw 0
 call Screen.setColor 1
 pop temp 0
-call Screen.drawRectangle 1
+call Screen.drawRectangle 4
 pop temp 0
 push constant 0
 return
 function Main.erase 0
 call Screen.setColor 1
 pop temp 0
-call Screen.drawRectangle 1
+call Screen.drawRectangle 4
 pop temp 0
 push constant 0
 return

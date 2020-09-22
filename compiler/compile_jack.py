@@ -433,9 +433,15 @@ class Compiler:
             xml = self.compile_expression(xml, term)
         # print("possible tags", self.next_tag)
         # sugris tag'as jeigu nerando symboliu lenteleje, reiskia tai funkcija
-        make_function_name_to_call = ''
-        if self.generate_term_vm():
-            make_function_name_to_call = self.next_tag[1]
+        # make_function_name_to_call = ''
+        tag_list = []
+        if self.next_tag[0] == 'identifier':
+        # kazkas apie klases funkcija
+            kind, _ = self.get_index_by_name(self.next_tag[1])
+            if not kind:
+                tag_list.append(self.next_tag)
+        self.generate_term_vm()
+
         xml = self.generate_tag(xml, term)
         if self.next_tag[1] == '[':
             xml = self.generate_tag(xml, term)
@@ -444,11 +450,13 @@ class Compiler:
         if self.next_tag[1] == '.': # ????
             # Add .
             # print("Add dot from term", self.next_tag)
-            make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
+            # make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
+            tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, term)
             # Add subroutine name
             # print("Add subroutine name", self.next_tag)
-            make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
+            # make_function_name_to_call = make_function_name_to_call + self.next_tag[1]
+            tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, term)
 
             # Add symbol
@@ -457,11 +465,12 @@ class Compiler:
             exp_list = ET.SubElement(term, 'expressionList')
             xml = self.compile_expression_list(xml, exp_list)
             xml = self.generate_tag(xml, term)
-
-            self.vm.write_call(make_function_name_to_call, self.current_args)
+            print("Start write call from term", self.next_tag)
+            self.compile_call_vmcode(tag_list)
+            # self.vm.write_call(make_function_name_to_call, self.current_args)
             # kadangi iskviesta args reikia nunulinti
             # print("Make current args from terms", self.current_args, "self.next_tag[1]", self.next_tag)
-            self.current_args = 0
+            # self.current_args = 0
             # jeigu visada kvieciamas sitas is let, tada i temp segmenta idedamas 0, jeigu ne tai neveiks ir reikia taisyti
             self.vm.write_push('temp', 0)
             return xml
@@ -476,7 +485,7 @@ class Compiler:
         true - constant -1 """
 
     def generate_term_vm(self):
-        # print("call term vm", self.next_tag)
+        print("generate term vm", self.next_tag)
         if self.next_tag[0] == 'integerConstant':
             self.vm.write_push('constant', self.next_tag[1])
         if self.next_tag[1] == 'false':
@@ -487,13 +496,8 @@ class Compiler:
         if self.next_tag[0] == 'identifier':
             # print("From Term find kind and index", self.next_tag)
             kind, no = self.get_index_by_name(self.next_tag[1])
-            # print("KIND, NO", kind, no)
-            # kartais indentifier neranda, nes kvieciamas klases funkcija
-            if not kind:
-                # print("return true", kind)
-                return True
-            print("WRITING PUSH ???")
-            self.vm.write_push(kind, no)
+            if kind:
+                self.vm.write_push(kind, no)
         # print("return false")
         return False
 
@@ -512,7 +516,7 @@ class Compiler:
             # print("From Do While, self.next_tag",self.next_tag)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, do)
-                self.compile_do_vmcode(tag_list)
+                self.compile_call_vmcode(tag_list)
                 break
             if self.next_tag[1] == '(':
                 xml = self.generate_tag(xml, do)
@@ -523,11 +527,13 @@ class Compiler:
         return xml
 
     """ Subroutine Call subroutineName | (className | varName) . subroutineName"""
-    def compile_do_vmcode(self, tag_list):
+    def compile_call_vmcode(self, tag_list):
         # print("tag_list", tag_list)
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
             func_name = func_name + tag_list[1][1] + tag_list[2][1]
+        else:
+            func_name = self.current_class_name + '.' + tag_list[0][1]
         # print("self.current_args from do", self.current_args)
         self.vm.write_call(func_name, self.current_args)
         self.current_args = 0

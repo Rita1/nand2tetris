@@ -1,8 +1,13 @@
 function Main.new 0
+push constant 2
+call Memory.alloc 1
+pop temp 0
+push temp 0
+pop pointer 0
 push argument 0
-pop  0
+pop this 0
 push argument 1
-pop  0
+pop this 1
 push argument 2
 pop  0
 call draw 0

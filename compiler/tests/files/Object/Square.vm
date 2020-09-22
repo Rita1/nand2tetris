@@ -10,7 +10,7 @@ push argument 1
 pop this 1
 push argument 2
 pop this 2
-call draw 0
+call Square.draw 0
 pop temp 0
 return
 function Square.draw 0

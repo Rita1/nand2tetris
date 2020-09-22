@@ -6,7 +6,7 @@ if-goto Main.run.while.0.1
 push constant 0
 push constant 0
 push constant 30
-call Square.new 1
+call Square.new 3
 pop temp 0
 push temp 0
 pop  0

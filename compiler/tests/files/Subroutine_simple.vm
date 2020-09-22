@@ -1,1 +1,6 @@
 function Main.new 0
+push constant 0
+call Memory.alloc 1
+pop temp 0
+push temp 0
+pop pointer 0
