@@ -178,6 +178,8 @@ class Compiler:
                     no = s.no
                     if s.kind == 'field':
                         kind = 'this'
+                    else:
+                        kind = 'static'
         # print("kind, no", kind, no)
         return (kind, no)
 
@@ -352,9 +354,12 @@ class Compiler:
             tag_list.append(self.next_tag)
             xml = self.generate_tag(xml, let_statement)
             if self.next_tag[1] == '[':
+                tag_list.append(self.next_tag)
                 xml = self.generate_tag(xml, let_statement)
                 xml = self.compile_expression(xml, let_statement)
                 xml = self.generate_tag(xml, let_statement)
+                # push arr ir add
+                self.compile_let_array_to_vm(tag_list)
             if self.next_tag[1] == '=':
                 xml = self.generate_tag(xml, let_statement)
                 xml = self.compile_expression(xml, let_statement)
@@ -367,17 +372,37 @@ class Compiler:
 
     """ Array access let arr[expression1] = expression2
     push arr
-    push expression1
+    push expression1 (VM code)
     add
+    push expression2 (VM code)
+    pop temp 0
     pop pointer 1
-    push expression2
+    push temp 0 
     pop that 0 """
 
-    def compile_let_vm(self, tag_list):
-        # print("compile_let", tag_list)
-        # print(tag_list[1][1])
+    # compile push ARRAY and add - ties 133
+    def compile_let_array_to_vm(self, tag_list):
+        # print("tag_list from let", tag_list)
+
         kind, no = self.get_index_by_name(tag_list[1][1])
-        self.vm.write_pop(kind, no)
+        self.vm.write_push(kind, no)
+        self.vm.write_arit('add')
+        # print("kind, no", kind, no)
+        return
+
+    def compile_let_vm(self, tag_list):
+        print("compile_let", tag_list)
+        # print(tag_list[1][1])
+        # reikia patikrinti ar kompiliuojam array
+        if tag_list[-1][1] == '[':
+            print("Found array")
+            self.vm.write_pop('temp', 0)
+            self.vm.write_pop('pointer', 1)
+            self.vm.write_push('temp', 0)
+            self.vm.write_pop('that', 0)
+        else:
+            kind, no = self.get_index_by_name(tag_list[1][1])
+            self.vm.write_pop(kind, no)
         return
 
     """ Compile var decl """
@@ -482,6 +507,10 @@ class Compiler:
         if self.next_tag[1] == '[':
             xml = self.generate_tag(xml, term)
             xml = self.compile_expression(xml, term)
+            ## Compile Array from Term
+            self.vm.write_arit('add')
+            self.vm.write_pop('pointer', 1)
+            self.vm.write_push('that', 0)
             xml = self.generate_tag(xml, term)
         if self.next_tag[1] == '.': # ????
             # Add .
@@ -537,9 +566,11 @@ class Compiler:
             str_len = len(self.next_tag[1])
             self.vm.write_push('constant', str_len)
             self.vm.write_call('String.new', 1)
+            self.vm.write_push('temp', 0)
             for char in self.next_tag[1]:
                 self.vm.write_push('constant', ord(char))
                 self.vm.write_call('String.appendChar', 2)
+                self.vm.write_push('temp', 0)
                 # print(char)
         if self.next_tag[0] == 'identifier':
             # print("From Term find kind and index", self.next_tag)
@@ -591,7 +622,7 @@ class Compiler:
 
     """ Subroutine Call subroutineName | (className | varName) . subroutineName"""
     def compile_call_vmcode(self, tag_list):
-        # print("tag_list", tag_list)
+        print("tag_list", tag_list)
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
             # kartais gali buti kad gautas tagas yra varName, tada jo reikia paieskoti

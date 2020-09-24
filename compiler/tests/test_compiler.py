@@ -142,5 +142,7 @@ class TestMain(unittest.TestCase):
 
     def test_array_vm(self):
         c1 = main.Main().main('Average')
+        c2 = main.Main().main('Pong')
 
-        self.answers("/tests/files/Average/Main.vm", "/tests/files/Average/Main_answ.vm")
+        # self.answers("/tests/files/Average/Main.vm", "/tests/files/Average/Main_answ.vm")
+        self.answers("/tests/files/Pong/Main", "/tests/files/Pong/Main_answ.vm")

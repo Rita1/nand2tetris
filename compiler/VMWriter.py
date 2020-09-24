@@ -44,10 +44,12 @@ class VMWriter:
 
     def write_arit(self, command):
         s_to_write = ''
-        if command == '+':
+        if command == '+' or command == 'add':
             s_to_write = 'add'
         if command == '*':
             s_to_write = 'call Math.multiply 2'
+        if command == '/':
+            s_to_write = 'call Math.divide 2'
         if command == 'neg':
             s_to_write = 'neg'
         if command == 'not' or command == '~':

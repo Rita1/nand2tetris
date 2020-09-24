@@ -51,10 +51,14 @@ class XMLHelper():
             # Get first tag
             first_tag = ""
             while not first_tag.strip():  # Enteriai
-                first_tag = tag_reader.__next__().strip()
+                first_stag_wth_spaces = tag_reader.__next__()
+                # print(first_stag_wth_spaces, "first_stag_wth_spaces")
+                first_tag = first_stag_wth_spaces.strip()
             first_tag = first_tag[1:-1]
             # Get second tag
-            second_tag = tag_reader.__next__().strip()
+            second_tag_wth_spaces = tag_reader.__next__()
+            # print("second_tag_wth_spaces", second_tag_wth_spaces, len(second_tag_wth_spaces))
+            second_tag = second_tag_wth_spaces
             if second_tag == '&lt;':
                 second_tag = '<'
             if second_tag == '&gt;':
