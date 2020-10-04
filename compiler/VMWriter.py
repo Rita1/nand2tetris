@@ -19,6 +19,8 @@ class VMWriter:
         s_to_write = ''
         if return_value == 'void':
             s_to_write = 'push constant 0' + '\n'
+        # if return_value == 'this':
+        #     s_to_write = 'push pointer 0' + '\n'
         s_to_write = s_to_write + 'return' + '\n'
         with open(self.file_to_write, 'a') as fw:
             fw.write(s_to_write)
@@ -64,7 +66,7 @@ class VMWriter:
             s_to_write = 'lt'
         if command == '&':
             s_to_write = 'and'
-        if command == 'or':
+        if command == 'or' or command == '|':
             s_to_write = 'or'
 
         s_to_write = s_to_write + '\n'

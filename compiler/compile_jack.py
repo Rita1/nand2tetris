@@ -108,9 +108,11 @@ class Compiler:
 
     """ Method level symbol table method level """
     def create_symbol_table(self, list_of_tags, kind=''):
-        # print("list of tags", list_of_tags)
+        print("list of tags", list_of_tags)
+        print("kind", kind)
         i = 2
         if kind == 'argument':
+            print("start")
             i = 0
             while len(list_of_tags[i:]) > 0:
                 type = list_of_tags[i][1]
@@ -118,6 +120,7 @@ class Compiler:
                 no = self.no_of_argument
                 self.no_of_argument += 1
                 symbol = Compiler.Symbol(name=name, type=type, kind=kind, no=no)
+                print("symbol", symbol)
                 self.symbol_table_method.append(symbol)
                 i += 3
             return
@@ -218,6 +221,10 @@ class Compiler:
             xml = self.generate_tag(xml, subroutine_dec)
         self.current_return_value = tags_list[1]
 
+        if tags_list[0] == 'method':
+            print("self.current_args from method", self.no_of_argument)
+            self.no_of_argument += 1
+            print("Now", self.no_of_argument)
         # print("From subroutine call parameter list", self.next_tag)
         xml = self.compile_parameter_list(xml, subroutine_dec)
         # print("After subroutine call parameter list", self.next_tag)
@@ -239,7 +246,6 @@ class Compiler:
             # Jeigu methodas, pirmas perduotas argumentas bus pointeris, kuri reikia issisaugoti
             self.vm.write_push('argument', 0)
             self.vm.write_pop('pointer', 0)
-
         # print("Tag list", tags_list)
         if tags_list[0] == 'constructor':
             # print("Found object")
@@ -285,6 +291,10 @@ class Compiler:
         # print("FROM PARAMETER LIST")
         parameter_dec = ET.SubElement(element, 'parameterList')
         to_symbol_table = []
+        # if self.currenct_funct_type == 'method':
+        #     symbol = Compiler.Symbol(name="this", type=self.current_class_name, kind="argument", no=self.no_of_argument)
+        #     self.symbol_table_method.append(symbol)
+        #     self.no_of_argument += 1
         while True:
             if self.next_tag[1] == ')':
                 self.create_symbol_table(to_symbol_table, kind="argument")
@@ -391,11 +401,11 @@ class Compiler:
         return
 
     def compile_let_vm(self, tag_list):
-        print("compile_let", tag_list)
+        # print("compile_let", tag_list)
         # print(tag_list[1][1])
         # reikia patikrinti ar kompiliuojam array
         if tag_list[-1][1] == '[':
-            print("Found array")
+            # print("Found array")
             self.vm.write_pop('temp', 0)
             self.vm.write_pop('pointer', 1)
             self.vm.write_push('temp', 0)
@@ -494,13 +504,13 @@ class Compiler:
         # sugris tag'as jeigu nerando symboliu lenteleje, reiskia tai funkcija
         # make_function_name_to_call = ''
         tag_list = []
-        if self.next_tag[0] == 'identifier':
-        # kazkas apie klases funkcija
-            kind, _ = self.get_index_by_name(self.next_tag[1])
-            if not kind:
-                tag_list.append(self.next_tag)
+        # if self.next_tag[0] == 'identifier':
+        # # kazkas apie klases funkcija
+        #     kind, _ = self.get_index_by_name(self.next_tag[1])
+        #     if not kind:
+        #         tag_list.append(self.next_tag)
             # Bus metodas jeigu nera tasko arba jeigu indetifier bus field symboliu lentelej
-
+        tag_list.append(self.next_tag)
         self.generate_term_vm()
 
         xml = self.generate_tag(xml, term)
@@ -572,6 +582,9 @@ class Compiler:
                 self.vm.write_call('String.appendChar', 2)
                 self.vm.write_push('temp', 0)
                 # print(char)
+        if self.next_tag[1] == 'this':
+            self.vm.write_push('pointer', 0)
+
         if self.next_tag[0] == 'identifier':
             # print("From Term find kind and index", self.next_tag)
             kind, no = self.get_index_by_name(self.next_tag[1])
@@ -595,19 +608,18 @@ class Compiler:
             # print("From Do While, self.next_tag",self.next_tag)
             if self.next_tag[1] == ';':
                 xml = self.generate_tag(xml, do)
+                print("start compile from do", tag_list)
                 self.compile_call_vmcode(tag_list)
                 break
             if self.next_tag[1] == '(':
                 if not found_dot:
                     # tikriausiai 0 ? kadangi pushinam pointeri nes radom metoda +1 prie argumentu
                     self.vm.write_push('pointer', 0)
-                    self.current_args += 1
                 # a) var.draw() - var bus field symboliu lenteleje
                 if found_dot:
                     kind, no = self.get_index_by_name(tag_list[0][1])
                     if kind:
                         self.vm.write_push(kind, no)
-                        self.current_args += 1
                 xml = self.generate_tag(xml, do)
                 exp_list = ET.SubElement(do, 'expressionList')
                 xml = self.compile_expression_list(xml, exp_list)
@@ -622,19 +634,20 @@ class Compiler:
 
     """ Subroutine Call subroutineName | (className | varName) . subroutineName"""
     def compile_call_vmcode(self, tag_list):
-        print("tag_list", tag_list)
+        # print("tag_list from call", tag_list)
         func_name = tag_list[0][1]
         if tag_list[1][1] == '.':
             # kartais gali buti kad gautas tagas yra varName, tada jo reikia paieskoti
             kind, no = self.get_index_by_name(tag_list[0][1])
             if kind:
+                self.current_args += 1
                 type = self.get_type_by_name(tag_list[0][1])
                 func_name = type + '.' + tag_list[2][1]
             else:
                 func_name = func_name + tag_list[1][1] + tag_list[2][1]
         else:
+            self.current_args += 1
             func_name = self.current_class_name + '.' + tag_list[0][1]
-        # print("self.current_args from do", self.current_args)
         self.vm.write_call(func_name, self.current_args)
         self.current_args = 0
         # print("Make current args from do", self.current_args, "tag", self.next_tag[1])
@@ -658,8 +671,9 @@ class Compiler:
         # print("current return value", self.current_return_value)
         # Todo veikia tik klasei ir void
         # jeigu return value lygi klasei, tai bus objekto konstruktorius ir reikia sugrazinti pointeri
-        if self.current_return_value == self.current_class_name:
-            self.vm.write_push('pointer', 0)
+        # if self.current_return_value == self.current_class_name:
+        #     self.vm.write_push('pointer', 0)
+        # print(self.current_return_value)
         # Add return
         self.vm.write_return(self.current_return_value)
         # Add;

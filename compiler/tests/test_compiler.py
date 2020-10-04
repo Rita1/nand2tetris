@@ -134,15 +134,29 @@ class TestMain(unittest.TestCase):
     def test_object_vm(self):
         c1 = main.Main().main('Object')
         c2 = main.Main().main('Object2')
+        c3 = main.Main().main('Object3')
+        c4 = main.Main().main('Object4')
 
-        self.answers("/tests/files/Object/Main.vm", "/tests/files/Object/Main_answ.vm")
+        # self.answers("/tests/files/Object/Main.vm", "/tests/files/Object/Main_answ.vm")
         self.answers("/tests/files/Object/Square.vm", "/tests/files/Object/Square_answ.vm")
-        self.answers("/tests/files/Object2/Main.vm", "/tests/files/Object2/Main_answ.vm")
-        self.answers("/tests/files/Object2/Main.vm", "/tests/files/Object2/Main_answ.vm")
+        # self.answers("/tests/files/Object2/Main.vm", "/tests/files/Object2/Main_answ.vm")
+        # self.answers("/tests/files/Object3/Main.vm", "/tests/files/Object3/Main_answ.vm")
+        # self.answers("/tests/files/Object4/PongGame.vm", "/tests/files/Object4/PongGame_answ.vm")
 
-    def test_array_vm(self):
-        c1 = main.Main().main('Average')
-        c2 = main.Main().main('Pong')
+    def test_object2_vm(self):
+        c1 = main.Main().main('Object5')
 
-        # self.answers("/tests/files/Average/Main.vm", "/tests/files/Average/Main_answ.vm")
-        self.answers("/tests/files/Pong/Main", "/tests/files/Pong/Main_answ.vm")
+        self.answers("/tests/files/Object5/Bat.vm", "/tests/files/Object5/Bat_answ.vm")
+
+    # def test_array_vm(self):
+    #     c1 = main.Main().main('Average')
+    #     c2 = main.Main().main('Pong')
+    #
+    #     # self.answers("/tests/files/Average/Main.vm", "/tests/files/Average/Main_answ.vm")
+    #     self.answers("/tests/files/Pong/Main", "/tests/files/Pong/Main_answ.vm")
+    #
+    # def test_pong(self):
+    #
+    #     c2 = main.Main().main('Pong')
+    #     self.answers("/tests/files/Pong/Main.vm", "/tests/files/Pong/Main_answ.vm")
+    #     self.answers("/tests/files/Pong/PongGame.vm", "/tests/files/Pong/PongGame_answ.vm")
