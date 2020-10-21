@@ -1,0 +1,199 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    
+    static Array RAM;
+    static Array heap;
+    static Array freeList;
+
+    /** Initializes the class. */
+    function void init() {
+        let RAM = 0;
+        let heap = 2048;
+        let freeList = heap;
+        let freeList[0] = 0; // next
+        let freeList[1] = 14327; // size
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        var int val;
+        let val = RAM[address];
+        return val;
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let RAM[address] = value;
+        return;
+    }
+
+    function int updateBlock(int toCheck, int oldBlock, int size) {
+        var Array p;
+        var int oldSize;
+        var int oldPointer;
+        let oldSize = toCheck[1]; // 14237
+        let oldPointer = toCheck[0]; // 2048
+        // grazinti blokelio base adresa
+        let p = toCheck+2; // 2050
+        // blokelyje ideti pointeri ir dydi (duotas dydis + 2)
+        let p[-2] = toCheck; // 2048
+        let p[-1] = size + 2; // 
+        // arba tai pirmas blokelis, arba jau buvo ateita is kito blokelio
+        // jeigu ateita is kito blokelio, reikia updatinti esama ir esama sulinkinti su senu
+        if (oldBlock > 0) {
+            let oldBlock[0] = toCheck + size + 2;
+            let toCheck = toCheck + size + 2;
+            let toCheck[0] = oldPointer;
+            let toCheck[1] = oldSize - size - 2;
+        }
+        else {
+            // arba cia pirmas blokelis
+            let freeList = toCheck + size + 2;
+            let freeList[0] = 0;
+            let freeList[1] = oldSize - size - 2;
+        }
+      //  do Output.printInt(freeList);
+      //  do Memory.poke(8000, freeList); // TRINTI
+        return p;
+        
+    }
+
+    function void merge() {
+        var int toCheck, nextBlock, l;
+        var boolean stop;
+        var boolean tryAgain;
+
+        let toCheck = freeList;
+        let stop = false;
+        let tryAgain = false;
+        while (~(stop)) {
+            if ((toCheck[0] = 0) | (toCheck = 0)) {
+                if (~(tryAgain)) {
+                    let stop = true;
+                    return;
+                }
+                let tryAgain = false;
+            }
+            let l = toCheck + toCheck[1];
+            
+            if (l = toCheck[0]) {
+                do Output.printInt(-88);
+                let nextBlock = toCheck[0];
+                let toCheck[0] = nextBlock[0];
+                let toCheck[1] = nextBlock[1] + toCheck[1];
+                let tryAgain = true;
+            }
+            if ((tryAgain) & (toCheck[0] = 0)) {
+                let toCheck = freeList;
+            }
+            else {
+                let toCheck = toCheck[0]; 
+            }    
+        }
+
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+
+         var Array pointer;
+         var boolean stop;
+         var boolean secondTry;
+         var int toCheck;
+         var int oldBlock;
+
+         let stop = false;
+         let toCheck = freeList;
+         let oldBlock = -1;
+         // pirmiausia reikia patikrinti ar yra tuscios vietos
+         while (~(stop)) {
+
+             if (toCheck[0] = 0) {
+                 // da gali ir vietos nebuti
+                 if (toCheck[1] < (size + 1)) {
+                     if (secondTry) {
+                         do Sys.error(6);
+                         let stop = true;
+                     }
+                     do Memory.merge();
+                     let secondTry = true;
+                     let toCheck = freeList;
+                     let oldBlock = -1;
+                 }
+                 else {
+                     let pointer = Memory.updateBlock(toCheck, oldBlock, size);
+                     return pointer;
+                 }
+              }
+              // paziurim ar uztenka vietos, turi likti ne maziau 3 vnt 
+             if (toCheck[1] > (size + 5)) {
+                 let pointer = Memory.updateBlock(toCheck, oldBlock, size);
+                 let stop = true;
+             }
+             // paziurim kitur
+             else {
+                 let oldBlock = toCheck;
+                 let toCheck = toCheck[0];
+             }
+         }
+
+         
+      //   do Output.printString(" Checking freelist \n");        
+      //   do Output.printInt(freeList[0]);
+      //   do Output.printInt(freeList[1]);
+         return pointer;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+         var int oldBlock;
+         var int toCheck;
+         var boolean stop;
+
+         // pirmiausia issaugom gauto array base adresa
+         let o = o[-2];
+         let toCheck = freeList;
+         let oldBlock = freeList;
+         while (~(stop)) {
+             // pats pirmas blokelis
+             if (toCheck > o) {
+                 // tada reikia gauto blokelio galva ideti senojo blokelio adresa
+         	 let o[0] = freeList;
+         	// blokeli nukeliam i pradzia
+        	 let freeList = o;
+                 let stop = true;
+             }
+             if (toCheck[0] > o) {
+                
+                 let o[0] = toCheck[0];
+                 let oldBlock[0] = o;
+                 let stop = true;
+             }
+             else {
+                 let oldBlock = toCheck;
+                 let toCheck = toCheck[0];
+             }
+         }
+         
+
+
+      //   do Memory.poke(8000, freeList); // TRINTI
+       //  do Output.printInt(freeList[0]);
+       //  do Output.printInt(freeList[1]);
+
+         return;
+    }    
+}
