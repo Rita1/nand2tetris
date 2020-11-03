@@ -1,0 +1,160 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Keyboard.jack
+
+/**
+ * A library for handling user input from the keyboard.
+ */
+class Keyboard {
+    
+ //   static String stringBuffer;
+    /** Initializes the keyboard. */
+    function void init() {
+    //    let stringBuffer = String.new(270);
+        return;
+    } 
+
+    /**
+     * Returns the character of the currently pressed key on the keyboard;
+     * if no key is currently pressed, returns 0.
+     *
+     * Recognizes all ASCII characters, as well as the following keys:
+     * new line = 128 = String.newline()
+     * backspace = 129 = String.backspace()
+     * left arrow = 130
+     * up arrow = 131
+     * right arrow = 132
+     * down arrow = 133
+     * home = 134
+     * End = 135
+     * page up = 136
+     * page down = 137
+     * insert = 138
+     * delete = 139
+     * ESC = 140
+     * F1 - F12 = 141 - 152
+     */
+    function char keyPressed() {
+     // 24576
+     var int value;
+
+     let value = Memory.peek(24576);
+    // do Output.printInt(value);
+     if (~(value = 0)) {
+         return value;
+     }
+     else {
+         return 0;
+     } 
+    }
+
+    /**								
+     * Waits until a key is pressed on the keyboard and released,
+     * then echoes the key to the screen, and returns the character 
+     * of the pressed key.
+     */
+    function char readChar() {
+
+        var char c;
+        do Output.printChar(124);
+        while (Keyboard.keyPressed() = 0) {
+            do Sys.wait(1);
+        }
+        let c = Keyboard.keyPressed();
+        while (~(Keyboard.keyPressed() = 0)) {
+            do Sys.wait(1);
+        }
+        do Output.printChar(c);
+        //let c = 'a';
+        return c;
+    }
+
+    /**								
+     * Displays the message on the screen, reads from the keyboard the entered
+     * text until a newline character is detected, echoes the text to the screen,
+     * and returns its value. Also handles user backspaces.
+     */
+    function String readLine(String message) {
+         
+         var String s;
+         var char c;
+         let s = String.new(80);
+         do Output.printString(message);
+         while (true) {
+             let c = Keyboard.readChar();
+             if (c = 128) {
+                 do Output.println();
+                 return s;
+             }
+             if (c = 129) {
+                 do s.eraseLastChar();
+                 do Output.backSpace();                 
+             }
+             else {
+                 do s.appendChar(c);
+             }
+         }
+         return s;
+    }   
+
+   // Another approach is to allocate a single larger string in Keyboard.init(), perhaps 250 characters -- enough for a bit more than a 3 line response -- and read into that string. When you get the new-line, you can allocate a string that is exactly the required length and copy the response data into it.
+
+    /**								
+     * Displays the message on the screen, reads from the keyboard the entered
+     * text until a newline character is detected, echoes the text to the screen,
+     * and returns its integer value (until the first non-digit character in the
+     * entered text is detected). Also handles user backspaces. 
+     */
+    function int readInt(String message) {
+        var String s;
+        var int i, newInteger;
+        var char c;
+        var boolean stop, minus;
+        let s = String.new(80);
+        let stop = false;
+        do Output.printString(message);
+
+        while (~(stop)) {
+            let c = Keyboard.readChar();
+            if (c = 128) {
+            //    do s.appendChar(c);
+                do Output.println();
+                
+                let stop = true;
+            }
+            if (c = 129) {
+                do s.eraseLastChar();
+                do Output.backSpace();                 
+            }
+            else {
+                do s.appendChar(c);
+            }
+            
+        }
+        do Memory.poke(8000,s[0]);
+
+        let i = 2;
+        let newInteger = 0;
+    //    let decimal = 1;
+    //    let forTest = 8002;
+    //    let t = 0;
+        if (s[2] = 45) {
+            let minus = true;
+            let i = 3;
+        }
+        while (~(s[i] = 128)) {
+            let newInteger = newInteger * 10 + (s[i] - 48);
+         //   let decimal = decimal * 10;
+       //     do Memory.poke(forTest+t,newInteger);
+       //     let t = t + 1;
+            let i = i + 1;
+        }
+        if (minus) {
+            let newInteger = newInteger * -1;
+        }
+        do Output.printInt(newInteger);
+        do Memory.poke(8001,newInteger);
+        return newInteger;
+    }
+}
